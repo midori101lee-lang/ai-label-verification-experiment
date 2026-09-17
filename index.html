@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实验刺激 Demo · 3(AI标识) × 2(内容证据一致性)</title>
+<style>
+:root{
+  --ink:#1b1b1f; --ink2:#4a4a52; --ink3:#82828c; --ink4:#a8a8b0;
+  --line:#e6e6ea; --line2:#d4d4da;
+  --bg:#ffffff; --bg2:#f7f7f8; --bg3:#f0f0f2;
+  --accent:#1a6fb5; --accent-soft:#eaf3fb;
+  --mark:#fff3cd; --mark-line:#e8b931;
+  --ok:#2f7d4f; --warn:#a5601a; --bad:#b03a3a;
+  --r:10px; --r2:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC",sans-serif;
+  color:var(--ink); background:var(--bg3); font-size:15px; line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;font-size:inherit}
+
+/* ============ 顶部工具条 ============ */
+.topbar{background:#22242a;color:#e8e8ee;padding:14px 20px;position:sticky;top:0;z-index:100}
+.topbar-row{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-size:14px;font-weight:600;letter-spacing:.3px;white-space:nowrap}
+.brand span{display:block;font-weight:400;font-size:11.5px;color:#8f9099;letter-spacing:0;margin-top:1px}
+.badge-res{background:#3a3d45;color:#ffd479;font-size:11px;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.cond-readout{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cond-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:#31343c;padding:5px 10px;border-radius:6px;color:#9fd3ff;white-space:nowrap}
+.cond-name{font-size:12.5px;color:#c7c9d1}
+
+/* 2x3 矩阵切换器 */
+.matrix-wrap{max-width:1180px;margin:12px auto 0;padding-top:12px;border-top:1px solid #34373f}
+.matrix{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:8px;align-items:center;font-size:12.5px}
+.mx-h{color:#8f9099;text-align:center;padding-bottom:2px}
+.mx-rh{color:#8f9099;text-align:right;padding-right:6px;white-space:nowrap}
+.mx-btn{background:#2e3138;color:#d3d5dd;border:1px solid #3d4048;border-radius:8px;padding:9px 6px;
+  font-size:12.5px;text-align:center;transition:.14s;line-height:1.35}
+.mx-btn:hover{background:#383b44;border-color:#4d515b}
+.mx-btn.on{background:var(--accent);border-color:#3d8fd0;color:#fff;font-weight:600}
+.mx-btn .code{display:block;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;opacity:.65;margin-top:2px}
+.mx-btn.on .code{opacity:.85}
+.tb-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.tb-tools button{background:#3a3d45;color:#dcdde4;border-radius:7px;padding:7px 13px;font-size:12.5px;transition:.14s}
+.tb-tools button:hover{background:#484c56}
+.tb-tools .sw{width:14px;height:14px;border-radius:3px;border:1px solid #5a5e69;display:inline-block;
+  vertical-align:-2px;margin-right:5px;background:transparent}
+.tb-tools .sw.on{background:var(--mark-line);border-color:var(--mark-line)}
+
+/* ============ 标签页 ============ */
+.tabs{max-width:1180px;margin:0 auto;display:flex;gap:2px;padding:14px 20px 0;overflow-x:auto}
+.tab{background:transparent;color:#6e7078;padding:10px 16px;border-radius:8px 8px 0 0;font-size:13.5px;
+  white-space:nowrap;transition:.14s;border-bottom:2px solid transparent}
+.tab:hover{background:rgba(0,0,0,.04);color:#33353c}
+.tab.on{background:var(--bg);color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
+.shell{max-width:1180px;margin:0 auto;padding:0 20px 60px}
+.pane{background:var(--bg);border-radius:0 var(--r2) var(--r2) var(--r2);padding:26px 30px 32px;display:none}
+.pane.on{display:block}
+.pane h2{font-size:16px;font-weight:600;margin:0 0 4px}
+.pane .sub{font-size:12.5px;color:var(--ink3);margin-bottom:20px}
+.pane h3{font-size:14px;font-weight:600;margin:26px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+
+/* ============ 新闻页面（模拟真实新闻站） ============ */
+.news-site{border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;background:#fff;max-width:760px;margin:0 auto}
+.ns-head{border-bottom:2px solid #22242a;padding:11px 22px;display:flex;align-items:center;gap:12px}
+.ns-logo{font-size:17px;font-weight:700;letter-spacing:-.2px;color:#22242a}
+.ns-logo em{font-style:normal;color:var(--accent)}
+.ns-nav{display:flex;gap:14px;font-size:12.5px;color:#5f6169;margin-left:6px}
+.ns-body{padding:24px 22px 30px}
+.ns-kicker{font-size:12px;color:var(--accent);font-weight:600;letter-spacing:.4px;margin-bottom:8px}
+.ns-title{font-size:25px;line-height:1.38;font-weight:700;letter-spacing:-.3px;margin-bottom:14px;color:#16161a}
+.ns-meta{display:flex;gap:14px;font-size:12.5px;color:var(--ink3);padding-bottom:14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ns-meta .src{color:#42444c;font-weight:500}
+/* ---- AI 披露标签：简短 chip + ⓘ 展开（三条件视觉规格一致） ---- */
+.ai-wrap{padding:12px 0 0}
+.ai-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#5f6570;background:#f2f3f5;
+  border-radius:5px;padding:4px 10px;letter-spacing:.2px;line-height:1.5;cursor:pointer;user-select:none;transition:.14s}
+.ai-chip:hover{background:#e8eaee}
+.ai-chip .ii{font-style:normal;font-size:10px;font-weight:600;color:#8b909a;border:1px solid #c2c6cd;
+  border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.ai-note{display:none;margin-top:8px;font-size:12.5px;color:#6b7280;background:#fafbfc;border:1px solid #e8eaed;
+  border-radius:7px;padding:9px 12px;line-height:1.7;max-width:520px}
+.ai-note.on{display:block}
+
+/* ---- 证据速览行（默认关闭，开发者可开） ---- */
+.ev-sum{font-size:12.5px;color:#54595f;background:#eef0f2;border-radius:6px;padding:7px 11px;margin-bottom:9px;letter-spacing:.2px}
+
+/* ---- 高亮：一致/冲突两版真正不同的那一句 ---- */
+.hl{background:var(--mark);border-radius:3px;box-shadow:0 0 0 2px var(--mark)}
+
+/* ---- 折叠区：统计数字（正文不出现统计术语） ---- */
+.fold{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:14px 0 4px;background:#fcfcfd}
+.fold summary{cursor:pointer;font-size:12.5px;color:#5f6169;font-weight:500;list-style:none}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary::before{content:"▸ ";color:var(--ink4)}
+.fold[open] summary::before{content:"▾ "}
+.fold .dc{margin-top:9px;font-size:12.5px;color:#5a5f6b;line-height:1.85}
+.ns-figure{margin:18px 0 4px}
+.ns-figure svg{display:block;width:100%;height:auto;border-radius:6px}
+.ns-cap{font-size:11.5px;color:var(--ink4);margin-top:8px;text-align:center}
+.ns-lead{font-size:15.5px;color:#3c3e46;margin:18px 0;line-height:1.85}
+.ns-p{font-size:15px;color:#2c2e35;margin:0 0 15px;line-height:1.9;text-indent:2em}
+.ns-h4{font-size:14.5px;font-weight:600;margin:24px 0 4px;color:#1c1c22}
+.ev{background:var(--bg2);border-left:3px solid #b9bcc4;border-radius:0 8px 8px 0;padding:14px 16px;margin:12px 0}
+.ev.marked{background:var(--mark);border-left-color:var(--mark-line)}
+.ev-t{font-size:13px;font-weight:600;color:#26262c;margin-bottom:5px}
+.ev-b{font-size:13.5px;color:#3a3c44;line-height:1.78}
+.ev-s{font-size:11.5px;color:var(--ink4);margin-top:8px}
+.ns-foot{border-top:1px solid var(--line);padding-top:14px;margin-top:22px;font-size:12px;color:var(--ink3);line-height:1.8}
+
+/* ============ 通用组件 ============ */
+.card{border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin:12px 0;background:#fff}
+.card.s2{background:var(--bg2)}
+.note{background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:12px 15px;font-size:13px;color:#2c4756;line-height:1.75;margin:14px 0}
+.note.warn-n{background:#fdf6e9;border-left-color:#c99024;color:#5f4413}
+.note.bad-n{background:#fbeeee;border-left-color:#b03a3a;color:#5e2222}
+.note.ok-n{background:#eef7f1;border-left-color:#2f7d4f;color:#1f4d33}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--accent);color:#fff;border-radius:8px;padding:10px 20px;font-size:13.5px;font-weight:500;transition:.14s}
+.btn:hover{background:#155a94}
+.btn.sec{background:var(--bg3);color:var(--ink2);border:1px solid var(--line2)}
+.btn.sec:hover{background:#e6e6ea}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.q{font-size:14px;font-weight:600;margin:20px 0 9px;color:#1c1c22}
+.q .num{color:var(--accent);margin-right:5px}
+.q .hint{font-weight:400;font-size:12px;color:var(--ink3);margin-left:6px}
+.opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.opt{border:1px solid var(--line2);border-radius:8px;padding:9px 15px;font-size:13.5px;background:#fff;transition:.14s;color:#33353c}
+.opt:hover{border-color:#9aa8b5;background:#fafbfc}
+.opt.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.scale{display:flex;gap:0;align-items:stretch;flex-wrap:wrap;margin:6px 0 2px}
+.scale button{flex:1;min-width:44px;border:1px solid var(--line2);border-right-width:0;padding:9px 2px;font-size:13.5px;background:#fff;color:#3a3c44;transition:.12s}
+.scale button:first-child{border-radius:8px 0 0 8px}
+.scale button:last-child{border-radius:0 8px 8px 0;border-right-width:1px}
+.scale button:hover{background:#eef4f9}
+.scale button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.scale-cap{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink4);margin-top:5px}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+@media(max-width:720px){.vgrid{grid-template-columns:1fr}}
+.vbtn{border:1px solid var(--line2);border-radius:9px;padding:13px 15px;text-align:left;background:#fff;transition:.14s;display:block;width:100%}
+.vbtn:hover{border-color:var(--accent);background:#f8fbfd}
+.vbtn.on{border-color:var(--accent);background:var(--accent-soft)}
+.vbtn .vt{font-size:13.5px;font-weight:600;color:#1c1c22;display:flex;align-items:center;gap:7px}
+.vbtn .vd{font-size:12px;color:var(--ink3);margin-top:3px;line-height:1.6}
+.vbtn .vt .dot{width:7px;height:7px;border-radius:50%;background:var(--line2);flex:0 0 auto}
+.vbtn.on .vt .dot{background:var(--accent)}
+.step{font-size:11.5px;font-weight:600;color:var(--accent);letter-spacing:.6px;margin-bottom:6px}
+.hr{height:1px;background:var(--line);margin:24px 0}
+table.t{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+table.t th,table.t td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;line-height:1.65}
+table.t th{background:var(--bg2);font-weight:600;color:#33353c;font-size:12.5px}
+table.t td.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.codebox{background:#1e2027;color:#cfd6e2;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11.5px;line-height:1.7;padding:16px;border-radius:var(--r);overflow:auto;max-height:460px;white-space:pre}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.tag.ok{background:#e7f4ec;color:var(--ok)}
+.tag.warn{background:#fbf1e2;color:var(--warn)}
+.tag.bad{background:#fbeaea;color:var(--bad)}
+.tag.info{background:var(--accent-soft);color:#155a94}
+.kv{display:grid;grid-template-columns:200px 1fr;gap:8px 14px;font-size:13px;align-items:start}
+.kv dt{color:var(--ink2);font-weight:500}
+.kv dd{color:#33353c}
+ol.num-list{padding-left:22px;font-size:13.5px;line-height:1.85;color:#33353c}
+ol.num-list li{margin-bottom:9px}
+ul.dot{padding-left:20px;font-size:13.5px;line-height:1.85;color:#33353c}
+ul.dot li{margin-bottom:7px}
+.small{font-size:12.5px;color:var(--ink3);line-height:1.75}
+details{border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;margin:10px 0;background:#fff}
+details summary{cursor:pointer;font-size:13.5px;font-weight:600;color:#26262c;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸ ";color:var(--ink3)}
+details[open] summary::before{content:"▾ "}
+details .dc{margin-top:12px;font-size:13px;line-height:1.8;color:#3a3c44}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#22242a;color:#fff;
+  padding:11px 20px;border-radius:9px;font-size:13px;opacity:0;transition:.28s;z-index:300;pointer-events:none}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+.mc-item{border:1px solid var(--line);border-radius:var(--r);padding:15px 18px;margin:11px 0}
+.mc-item .qq{font-size:13.5px;font-weight:600;margin-bottom:10px}
+.flash{animation:fl 1.1s ease-out}
+@keyframes fl{0%{background:#fff8e1}100%{background:transparent}}
+
+/* ============ 预测试模式（默认显示，参与者视图） ============ */
+.pilot-wrap{max-width:780px;margin:0 auto;padding:22px 16px 80px}
+.pilot-wrap h2{font-size:18px;font-weight:700;margin:0 0 4px}
+.pilot-wrap .card,.pilot-wrap .mc-item,.pilot-wrap .note{max-width:none}
+.pilot-p{font-size:14.5px;color:#33353c;line-height:1.85;margin:10px 0}
+.pilot-wrap textarea{width:100%;border:1px solid var(--line2);border-radius:8px;padding:10px 12px;
+  font-family:inherit;font-size:13.5px;line-height:1.7;resize:vertical;color:#2c2e35}
+
+/* ============ 研究者入口（低存在感，被试不可见） ============ */
+#researcherMode[hidden]{display:none}
+.researcher-entry{position:fixed;right:13px;bottom:13px;z-index:400;background:#2a2d35;color:#cfd3dc;
+  font-size:11.5px;padding:7px 13px;border-radius:20px;opacity:.4;transition:.15s;letter-spacing:.3px}
+.researcher-entry:hover{opacity:1}
+.researcher-back{position:fixed;left:13px;bottom:13px;z-index:400;background:#2a2d35;color:#cfd3dc;
+  font-size:11.5px;padding:7px 13px;border-radius:20px;opacity:.9;display:none}
+.researcher-back:hover{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- 预测试模式（默认显示，参与者视图；不暴露条件名/条件码，不显示对错） -->
+<!-- ============================================================ -->
+<div id="pilotMode">
+  <div class="pilot-wrap">
+
+    <!-- 第 0 步：介绍 -->
+    <div id="pilotIntro" class="card">
+      <h2>关于网络新闻阅读的小调查</h2>
+      <p class="sub" style="margin-bottom:14px">约 3–5 分钟 · 无需专业知识 · 没有标准答案</p>
+      <p class="pilot-p">我们想请你阅读一则网络新闻，然后回答几个关于这则新闻的问题。请像平时刷手机看新闻一样自然阅读，凭第一感觉回答即可。</p>
+      <ul class="dot" style="margin:12px 0 4px">
+        <li>本次调查<b>不会收集</b>你的姓名、手机号、邮箱、学校等任何个人信息。</li>
+        <li>作答过程中可以随时返回重新阅读新闻。</li>
+        <li>问题没有对错之分，你的真实感受最有价值。</li>
+      </ul>
+      <div class="row" style="justify-content:center;margin-top:20px">
+        <button class="btn" id="btnPilotStart">开始阅读</button>
+      </div>
+    </div>
+
+    <!-- 第 1 步：阅读 -->
+    <div id="pilotRead" style="display:none">
+      <div class="note"><b>【阅读任务】</b>请像平时浏览新闻一样，阅读下面这则报道。阅读完毕后点击页面底部的按钮进入问题。你可以在阅读过程中随时回看。</div>
+      <div id="pilotNews"></div>
+      <div class="row" style="justify-content:center;margin-top:20px">
+        <button class="btn" id="btnPilotReadDone">我已阅读完毕，进入问题</button>
+      </div>
+    </div>
+
+    <!-- 第 2 步：问题 -->
+    <div id="pilotQs" style="display:none">
+      <div class="note">下面几个问题关于你刚才读到的这则报道。按你的理解回答即可，没有标准答案。</div>
+
+      <div class="mc-item">
+        <div class="qq"><span class="num">Q1.</span>这项研究中，使用护眼模式的学生是否报告自己感觉眼睛更舒服？</div>
+        <div class="opts" id="pq1">
+          <button class="opt" data-v="yes">是，报告说更舒服了</button>
+          <button class="opt" data-v="no">否，没有变化</button>
+          <button class="opt" data-v="na">文中没有提到这一点</button>
+        </div>
+      </div>
+
+      <div class="mc-item">
+        <div class="qq"><span class="num">Q2.</span>这篇报道中，不同观察结果呈现出的变化是否一致？</div>
+        <div class="scale" id="pq2"></div>
+        <div class="scale-cap"><span>1 = 完全不一致，互相矛盾</span><span>7 = 完全一致，互相支持</span></div>
+      </div>
+
+      <div class="mc-item">
+        <div class="qq"><span class="num">Q3.</span>如果你希望进一步了解这项研究，你认为目前这些信息能否通过查阅其他资料得到更明确的判断？</div>
+        <div class="scale" id="pq3"></div>
+        <div class="scale-cap"><span>1 = 完全不能</span><span>7 = 完全可以</span></div>
+      </div>
+
+      <div class="mc-item">
+        <div class="qq"><span class="num">Q4.</span>你认为这篇报道中是否存在明显错误的信息？</div>
+        <div class="opts" id="pq4">
+          <button class="opt" data-v="yes">有，明显错误</button>
+          <button class="opt" data-v="suspect">有一些可疑之处</button>
+          <button class="opt" data-v="no">没有，看不出错误</button>
+          <button class="opt" data-v="unknown">无法判断</button>
+        </div>
+      </div>
+
+      <div class="mc-item" style="background:var(--bg2)">
+        <div class="qq"><span class="num">开放题.</span>你刚才阅读这篇报道时，有没有哪个地方让你觉得难以理解？如果有，请简单说明。</div>
+        <textarea id="pqOpen" rows="4" placeholder="例如：某句话读不懂、某个数据不知道什么意思、整体不知道在讲什么……（可留空）"></textarea>
+      </div>
+
+      <div class="row" style="justify-content:center;margin-top:18px">
+        <button class="btn" id="btnPilotSubmit">提交作答</button>
+      </div>
+    </div>
+
+    <!-- 第 3 步：完成 -->
+    <div id="pilotDone" style="display:none">
+      <div class="note ok-n">
+        <b>感谢你的参与！</b>你的回答已记录在本机浏览器中。
+      </div>
+      <p class="pilot-p">研究者会收集这些作答，用来判断这则新闻材料是否容易被普通人理解。本页<b>不会显示</b>你被分配到的是哪一种材料版本，也<b>不会记录</b>任何个人信息。</p>
+      <p class="pilot-p">如果你愿意，可以把下面「我的回答」发给研究者（内含你被分配到的材料版本标记，方便他们按条件汇总，但仍不含任何个人信息）。</p>
+      <div class="row" style="margin-top:14px">
+        <button class="btn sec" id="btnPilotCopy">复制我的回答</button>
+        <button class="btn sec" id="btnPilotDownload">下载我的回答（JSON）</button>
+        <button class="btn sec" id="btnPilotAgain">再填一份（新随机材料）</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 研究者测试模式（默认隐藏；由右下角低存在感「研究者」按钮唤出） -->
+<!-- ============================================================ -->
+<div id="researcherMode" hidden>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="brand">实验刺激 Demo<span>3（AI标识）× 2（内容证据一致性）</span></div>
+    <span class="badge-res">研究者专用 · 被试不可见</span>
+    <div class="cond-readout">
+      <span class="cond-name" id="tCondName">无AI标识 × 证据一致</span>
+      <span class="cond-code" id="tCondCode">AI_label=0 · evidence_consistency=0</span>
+    </div>
+  </div>
+  <div class="matrix-wrap">
+    <div class="matrix" id="matrix"></div>
+    <div class="tb-tools">
+      <button id="btnRand">随机抽取一个条件</button>
+      <button id="btnHighlight"><span class="sw on" id="swHl"></span>高亮改动位置</button>
+      <button id="btnSum"><span class="sw" id="swSum"></span>证据速览行</button>
+      <button id="btnResetAll">重置全部数据</button>
+      <span class="small" id="hlNote" style="color:#8f9099">黄色底纹 = 一致/冲突两版<b>真正不同</b>的那一句（现在只有证据二的后半句与折叠区一个数值）</span>
+    </div>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="p1">① 刺激材料对比</button>
+  <button class="tab" data-p="p2">② 被试完整流程</button>
+  <button class="tab" data-p="p3">③ 数据与导出</button>
+  <button class="tab" data-p="p4">④ 纯净度审计</button>
+  <button class="tab" data-p="p5">⑤ 分析与风险</button>
+  <button class="tab" data-p="p6">⑥ 材料理解自检</button>
+  <button class="tab" data-p="p7">⑦ 预测试数据</button>
+</div>
+
+<div class="shell">
+
+<!-- ============================================================ -->
+<!-- ① 刺激材料对比 -->
+<!-- ============================================================ -->
+<div class="pane on" id="p1">
+  <h2>① 刺激材料对比</h2>
+  <p class="sub">上方矩阵切换 6 个条件，下方实时呈现该条件对应的新闻页面。「高亮改动位置」会把一致/冲突两版<b>真正不同</b>的那一句标黄——本轮改写后，两版差异已压缩到<b>证据二的后半句</b>与折叠区的一个数值。</p>
+
+  <details>
+    <summary>本轮改写说明：材料可理解性优化（改前 → 改后）</summary>
+    <div class="dc">
+      <table class="t">
+        <thead><tr><th style="width:20%">问题</th><th style="width:36%">改前</th><th>改后</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>要读懂 p 值</b></td>
+            <td>正文证据一、证据二各出现一次 <code>p = .012</code> <code>p = .03</code> <code>p = .41</code>，还要理解"达到统计显著水平 / 未达统计显著水平"</td>
+            <td>正文<b>完全不出现统计术语</b>（脚本实测：p 值出现 0 次）。数字与统计检验结果统一收进正文下方的折叠区「查看详细数据」，默认收起</td>
+          </tr>
+          <tr>
+            <td><b>要读懂专业指标</b></td>
+            <td>"泪膜破裂时间"，并用"该指标越长，说明眼表越湿润稳定"解释</td>
+            <td>正文只写「另一项与眼睛状态有关的指标」，<b>不出现任何指标名称</b>；指标名"眼表状态指标"仅出现在折叠区</td>
+          </tr>
+          <tr>
+            <td><b>直接告诉被试"有冲突"</b></td>
+            <td>证据二标题「客观生理指标：<b>未见显著变化</b>」直接与一致版标题形成对比；正文结尾写「<b>与主观评分的变化方向不一致</b>」；证据三标题「<b>尚不能确定</b>改善来源」</td>
+            <td>两版证据二标题<b>完全相同</b>（同为「另一项观察指标」）；正文不出现"不一致 / 冲突 / 矛盾 / 无法证明"等判断词，只描述两项结果各自的变化程度</td>
+          </tr>
+          <tr>
+            <td><b>依赖专家</b></td>
+            <td>证据三是「某三甲医院眼科医师访谈」，直接裁决哪条证据更重要（一致版"两项互相印证"、冲突版"因此尚不能确定"）</td>
+            <td>证据三改为<b>研究背景信息</b>（参与者来源、测试周期、后续计划），不含任何判断。<b>正文中的专家判断出现 0 次</b>（脚本实测）</td>
+          </tr>
+          <tr>
+            <td><b>证据三替被试做比较</b></td>
+            <td>证据三同时评述证据一与证据二的关系，实际替代了操作检验 MC2 的功能</td>
+            <td>证据三不再涉及前两项证据；不使用「因此 / 说明 / 意味着」等总结性连接</td>
+          </tr>
+          <tr>
+            <td><b>像"真假题"</b></td>
+            <td>"主观明显改善 vs 客观完全未改善"+ 裁判式专家结论，整体读起来接近"一项说有效、另一项验证失败"</td>
+            <td>改为「<b>部分支持</b> vs <b>结果没有完全对上</b>」：冲突版是"这项指标只有很小的变化、与对照组差别不大"，不是"完全无效"</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:10px">字数、证据数、来源数、语言强度等配平结果见「④ 实验纯净度审计」下方的自动核对表。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>选题评估：三个候选题与 10 条标准打分</summary>
+    <div class="dc">
+      <table class="t">
+        <thead><tr><th style="width:34%">标准</th><th>A. 科技/AI<br><span style="font-weight:400;color:#82828c">国产折叠屏铰链耐用性实测</span></th><th>B. 健康/生活<br><span style="font-weight:400;color:#82828c">手机"护眼模式"对视疲劳的作用</span></th><th>C. 社会/消费<br><span style="font-weight:400;color:#82828c">共享单车对短途通勤效率的影响</span></th></tr></thead>
+        <tbody>
+          <tr><td>1 普通大学生能理解</td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span></td></tr>
+          <tr><td>2 不需要专业知识</td><td><span class="tag warn">偏弱</span> 需要理解"铰链疲劳寿命""开合次数"</td><td><span class="tag ok">通过</span> 只需理解"用眼后眼睛累不累"</td><td><span class="tag ok">通过</span></td></tr>
+          <tr><td>3 不涉及敏感政治议题</td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span></td><td><span class="tag warn">偏弱</span> 易触及城市治理争议</td></tr>
+          <tr><td>4 不依赖强个人立场</td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span> 护眼属功能性判断，非身份性议题</td><td><span class="tag warn">偏弱</span> 有车/无车群体会分化</td></tr>
+          <tr><td>5 有真实性判断空间</td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span> 学界本身结论不一，判断空间大</td><td><span class="tag warn">偏弱</span> 结论较易被直觉判断</td></tr>
+          <tr><td>6 可自然放入 3 组独立证据</td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span> 学生自我感受 / 另一项观察指标 / 研究背景信息（<b>本轮已去掉专家解读，避免权威替被试做判断</b>）</td><td><span class="tag ok">通过</span></td></tr>
+          <tr><td>7 可制造一致与冲突</td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span> <b>「主观感受 vs 另一项观察指标」的分歧是真实、常见、且不需要统计知识就能读懂的分歧类型</b></td><td><span class="tag ok">通过</span></td></tr>
+          <tr><td>8 冲突不会一眼看出"写错了"</td><td><span class="tag warn">偏弱</span> 数据打架容易被看成造假</td><td><span class="tag ok">通过</span> 冲突是"这项指标变化很小"，不是"完全无效"，属科研常态</td><td><span class="tag ok">通过</span></td></tr>
+          <tr><td>9 可设计真实验证任务</td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span> 原始数据 / 机构说明 / 独立报道 / 事实核查天然齐备</td><td><span class="tag ok">通过</span></td></tr>
+          <tr><td>10 不靠改变来源质量制造冲突</td><td><span class="tag ok">通过</span></td><td><span class="tag ok">通过</span> 两个条件引用<b>完全相同</b>的来源名，只改数据</td><td><span class="tag ok">通过</span></td></tr>
+          <tr><td colspan="4" style="background:#eef7f1"><b>结论</b>：选 <b>B. 健康/生活 ——「手机护眼模式对视疲劳的作用」</b>。理由是它唯一在全部 10 条上通过，且其"主观量表 vs 客观生理指标"的分歧是<b>科研中真实存在、普通人能理解、且不需要贬低任何一方来源</b>的冲突类型。</td></tr>
+        </tbody>
+      </table>
+      <p class="small" style="margin-top:10px">A 被排除的核心原因：科技硬件实测的冲突容易读成"参数造假"，且需要一定产品知识；C 被排除的核心原因：涉及群际立场与治理争议，会引入未控制的个人相关性差异。</p>
+    </div>
+  </details>
+
+  <div class="row" style="margin:18px 0 6px;justify-content:space-between">
+    <div class="small"><b>当前条件</b>：<span id="p1CondName">无AI标识 × 证据一致</span></div>
+    <div class="small">AI标识：<span id="p1AiText" style="color:#8b8f98">（本条件不渲染任何标识）</span></div>
+  </div>
+
+  <div id="newsMount1"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ② 被试完整流程 -->
+<!-- ============================================================ -->
+<div class="pane" id="p2">
+  <h2>② 被试完整流程</h2>
+  <p class="sub">按真实被试流程走一遍：阅读 → 操作检验 → 核验机会 → 最终判断。所有作答实时写入「③ 数据」。</p>
+
+  <div class="row" style="justify-content:space-between;margin-bottom:14px">
+    <div class="small">当前分配条件：<b id="p2CondName">无AI标识 × 证据一致</b>（<span class="small" id="p2CondCode">AI_label=0 · evidence_consistency=0</span>）</div>
+    <div class="row">
+      <button class="btn sec" id="btnRandomAssign">随机分配一个新被试</button>
+      <button class="btn sec" id="btnRestartFlow">重新开始流程</button>
+    </div>
+  </div>
+
+  <!-- 进度 -->
+  <div class="row small" style="gap:9px;margin-bottom:16px;flex-wrap:wrap" id="flowProgress"></div>
+
+  <!-- STEP 1 阅读 -->
+  <div id="step1">
+    <div class="note"><b>【阅读任务】</b>请像平时浏览新闻一样，阅读下面这则新闻。阅读完毕后点击页面底部的按钮进入下一步。你可以在阅读过程中随时回看。</div>
+    <div id="newsMount2"></div>
+    <div class="row" style="justify-content:center;margin-top:20px">
+      <button class="btn" id="btnReadDone">我已阅读完毕，进入下一步</button>
+    </div>
+    <p class="small" style="text-align:center;margin-top:8px" id="readTimeNote"></p>
+  </div>
+
+  <!-- STEP 2 操作检验 -->
+  <div id="step2" style="display:none">
+    <div class="step">STEP 2 / 4 · 操作检验</div>
+    <h3 style="margin-top:0">阅读情况确认</h3>
+
+    <div class="mc-item">
+      <div class="qq"><span class="num">MC1.</span>这篇新闻是否标注了人工智能参与内容生产？</div>
+      <div class="opts" id="mc1"></div>
+      <p class="small">对应变量 <code>ai_manipulation_check</code>（0=没有标注 / 1=AI辅助 / 2=AI生成 / 9=记不清）</p>
+    </div>
+
+    <div class="mc-item">
+      <div class="qq"><span class="num">MC2.</span>新闻中提到的那几项结果之间，是否相互一致？</div>
+      <div class="scale" id="mc2"></div>
+      <div class="scale-cap"><span>1 = 完全不一致，互相矛盾</span><span>7 = 完全一致，互相支持</span></div>
+      <p class="small" style="margin-top:8px">对应变量 <code>consistency_manipulation_check</code>。<b>此题为操作检验，不作为第二自变量使用</b>；第二自变量仍以材料预设的 0/1 编码。</p>
+    </div>
+
+    <div class="mc-item" style="background:var(--bg2)">
+      <div class="qq">建议附加项 · MC3（可化解性检验）
+        <span class="tag info" style="margin-left:6px">建议保留</span></div>
+      <div class="scale" id="mc3"></div>
+      <div class="scale-cap"><span>1 = 完全无法查清</span><span>7 = 完全可以查清</span></div>
+      <p class="small" style="margin-top:8px">作用：HSM 的充分性原则有一个前提——只有当个体<b>预期加工能够缩小缺口</b>时才会投入系统式加工。若冲突被感知为"根本说不清"，结果会转向回避而非验证。<b>若本题在两组间出现显著差异，说明你的冲突材料已滑向"不可化解"，必须修改。</b></p>
+    </div>
+
+    <div class="mc-item" style="background:var(--bg2)">
+      <div class="qq">建议附加项 · MC4（是否被误解为"假信息"）
+        <span class="tag info" style="margin-left:6px">建议保留</span></div>
+      <div class="opts" id="mc4"></div>
+      <p class="small" style="margin-top:8px">作用：防止"证据冲突"被被试读成"这则新闻是假的"。<b>若冲突组在此题显著更高，说明操纵已与"信息真实性"混淆。</b></p>
+    </div>
+
+    <div class="row" style="justify-content:flex-end;margin-top:18px">
+      <button class="btn" id="btnToStep3">提交并进入核验环节</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 验证任务 -->
+  <div id="step3" style="display:none">
+    <div class="step">STEP 3 / 4 · 相关材料</div>
+    <h3 style="margin-top:0">如果你希望进一步了解这项研究，可以查看以下相关材料</h3>
+    <div class="note warn-n">
+      以下材料都可以点开，也可以直接进入下一步。材料可以随时关闭，关闭后可回到新闻继续阅读。
+      <br><br>
+      <b>研究者提示</b>：各项材料的内容在 6 个条件中<b>完全相同</b>（外部材料不随实验条件变化），且五个选项的视觉权重完全相等。
+    </div>
+    <div id="vMount"></div>
+    <div id="vCounter" class="small" style="margin-top:12px;color:var(--ink3)">已查看材料：0 个</div>
+    <div class="row" style="justify-content:flex-end;margin-top:14px">
+      <button class="btn sec" id="btnToStep4">进入最终判断</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 最终判断 -->
+  <div id="step4" style="display:none">
+    <div class="step">STEP 4 / 4 · 最终判断</div>
+    <h3 style="margin-top:0">根据你目前看到的信息</h3>
+
+    <div class="mc-item">
+      <div class="qq"><span class="num">Q1.</span>这则新闻的<b>核心结论</b>是否可信？</div>
+      <div class="scale" id="f1"></div>
+      <div class="scale-cap"><span>1 = 完全不可信</span><span>7 = 完全可信</span></div>
+      <p class="small" style="margin-top:8px">对应变量 <code>credibility</code></p>
+    </div>
+
+    <div class="mc-item">
+      <div class="qq"><span class="num">Q2.</span>你认为这则新闻是否需要进一步核实？</div>
+      <div class="scale" id="f2"></div>
+      <div class="scale-cap"><span>1 = 完全不需要</span><span>7 = 非常需要</span></div>
+      <p class="small" style="margin-top:8px">对应变量 <code>need_verification</code></p>
+    </div>
+
+    <div class="mc-item">
+      <div class="qq"><span class="num">Q3.</span>你认为这则新闻中核心结论的<b>准确性</b>如何？</div>
+      <div class="scale" id="f3"></div>
+      <div class="scale-cap"><span>1 = 很不准确</span><span>7 = 非常准确</span></div>
+      <p class="small" style="margin-top:8px">对应变量 <code>final_judgment</code></p>
+    </div>
+
+    <div class="mc-item" style="background:var(--bg2)">
+      <div class="qq">探索性 · Q4（感知不确定性）</div>
+      <div class="scale" id="f4"></div>
+      <div class="scale-cap"><span>1 = 非常不确定</span><span>7 = 非常确定</span></div>
+      <p class="small" style="margin-top:8px">对应变量 <code>judgment_confidence</code>。依据：Höltervennhoff et al. (2026, CHI) 发现 AI 标签提高了怀疑但<b>未改变判断信心</b>，因此建议把"怀疑"与"信心"分开测量。</p>
+    </div>
+
+    <div class="row" style="justify-content:center;margin-top:22px">
+      <button class="btn" id="btnFinish" style="padding:12px 28px">完成本次作答</button>
+    </div>
+  </div>
+
+  <!-- 完成 -->
+  <div id="stepDone" style="display:none">
+    <div class="note ok-n" style="margin-top:10px">
+      <b>本次流程已完成。</b>数据已写入「③ 数据与导出」，可复制 JSON 或下载 CSV。
+    </div>
+    <div class="codebox" id="doneSummary"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn" id="btnGoData">查看数据</button>
+      <button class="btn sec" id="btnAgain">随机分配下一个被试再走一遍</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ③ 数据 -->
+<!-- ============================================================ -->
+<div class="pane" id="p3">
+  <h2>③ 数据与导出</h2>
+  <p class="sub">右侧为当前记录；下方为累计的多被试记录表（Demo 版存在浏览器内存中，刷新即清空）。</p>
+
+  <h3>当前被试记录（JSON）</h3>
+  <div class="codebox" id="jsonOut">（尚未开始）</div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="btn sec" id="btnCopyJson">复制当前 JSON</button>
+    <button class="btn sec" id="btnDownloadJson">下载 JSON</button>
+    <button class="btn sec" id="btnDownloadCsv">下载 CSV（全部被试）</button>
+  </div>
+
+  <h3>变量说明</h3>
+  <div class="kv">
+    <dt>participant_id</dt><dd>自动生成</dd>
+    <dt>AI_label</dt><dd>0 = 无标识 ｜ 1 = AI辅助生成 ｜ 2 = AI生成</dd>
+    <dt>evidence_consistency</dt><dd>0 = 一致 ｜ 1 = 冲突（<b>材料预设值，非被试评分</b>）</dd>
+    <dt>credibility</dt><dd>Q1 · 核心结论可信度 1–7</dd>
+    <dt>verification</dt><dd>0 = 未验证（仅点了"暂不核验"）｜ 1 = 验证（至少点击了一个核验入口）</dd>
+    <dt>verification_count</dt><dd>点击过的核验入口数量（0–4）</dd>
+    <dt>verification_type</dt><dd>点击过的入口标签数组</dd>
+    <dt>verification_time</dt><dd>每个入口的停留秒数数组</dd>
+    <dt>verification_order</dt><dd>点击顺序（用于分析"先查什么"）</dd>
+    <dt>final_judgment</dt><dd>Q3 · 准确性判断 1–7</dd>
+    <dt>need_verification</dt><dd>Q2 · 是否需要进一步核实 1–7</dd>
+    <dt>judgment_confidence</dt><dd>Q4 · 判断信心 1–7（探索性）</dd>
+    <dt>ai_manipulation_check</dt><dd>MC1 · 0=没有 / 1=AI辅助 / 2=AI生成</dd>
+    <dt>consistency_manipulation_check</dt><dd>MC2 · 1–7（操作检验，非自变量）</dd>
+    <dt>resolvability_check</dt><dd>MC3 · 1–7（可化解性，建议保留）</dd>
+    <dt>false_info_check</dt><dd>MC4 · 是否读到明显错误信息</dd>
+    <dt>reading_time_sec</dt><dd>阅读时长（秒）</dd>
+  </div>
+
+  <h3>累计记录表</h3>
+  <div id="tableOut" class="small">（暂无记录）</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ④ 纯净度审计 -->
+<!-- ============================================================ -->
+<div class="pane" id="p4">
+  <h2>④ 实验纯净度审计</h2>
+  <p class="sub">十四项检查。判定基于当前已制作的材料；凡不能靠材料本身解决、需要预测试或正式实验验证的，均明确标注。第 1–10 项为原十项审计，第 11–14 项为本轮（材料可理解性优化）新增。</p>
+
+  <table class="t">
+    <thead><tr><th style="width:31%">审计项</th><th style="width:14%">判定</th><th>依据与处置</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>1. AI标识是否改变了来源信息之外的内容？</b></td>
+        <td><span class="tag ok">干净</span></td>
+        <td>三个条件共用<b>同一份 HTML 模板</b>与<b>同一份正文文本</b>。AI披露标签仅在一个独立节点（<code>.ai-wrap &gt; .ai-chip</code>）内渲染，不出现在标题、正文、三张信息卡、来源行、配图说明中。标题、发布日期、来源机构名、记者署名四个字段在 6 个条件中逐字相同。<br><b>本轮改进</b>：标签改为「<b>AI 辅助 ⓘ</b>」/「<b>AI 生成 ⓘ</b>」简短 chip，主标签<b>均只有 5 个字符</b>，视觉规格（位置、字号、颜色、圆角、内边距）三条件完全一致；完整说明放在点击 ⓘ 后的展开层。<b>主标签只操纵"AI 参与程度"一个维度</b>，不再出现"是否经人工核对 / 撰写"（旧版把这一条混在主标签里，等于同时操纵了两个维度）。</td>
+      </tr>
+      <tr>
+        <td><b>2. 一致/冲突是否改变了证据数量？</b></td>
+        <td><span class="tag ok">干净</span></td>
+        <td>两版均为 <b>3 组证据</b>，编号与标题结构一一对应（证据一 / 证据二 / 证据三）。</td>
+      </tr>
+      <tr>
+        <td><b>3. 一致/冲突是否改变了来源可信度？</b></td>
+        <td><span class="tag ok">干净</span></td>
+        <td>两版的三组来源标签<b>逐字相同</b>：「人因工程实验室《屏幕使用与视觉舒适度》项目报告」「人因工程实验室 · 眼表状态测试记录」「人因工程实验室 · 项目背景说明」。冲突通过<b>结果方向</b>制造，不是通过更换或贬低来源。<br><b>本轮改进</b>：三条来源现在同属一个实验室，<b>正文中不再有任何第三方权威（医院 / 医师 / 专家）</b>，因此排除了"来源可信度"与"权威依赖"两条替代解释。专家判断出现次数：一致版 0 / 冲突版 0（脚本实测）。</td>
+      </tr>
+      <tr>
+        <td><b>4. 一致/冲突是否改变了新闻长度？</b></td>
+        <td><span class="tag ok">已配平</span></td>
+        <td>导语、正文第一段、结尾段、配图说明、信息一、信息三、折叠区结构<b>完全一致</b>。唯一差异是信息二的「结果方向」句与折叠区的一个数值。<br><b>字数由页面脚本实时计算（见下方核对表）</b>，目标：全文总字数差值 0，信息二正文字数差值 ≤ 1。</td>
+      </tr>
+      <tr>
+        <td><b>5. 一致/冲突是否改变了语言强度？</b></td>
+        <td><span class="tag ok">干净</span></td>
+        <td>两版均使用同一套描述性语言，未使用"显著优于""完全无效""被推翻""存疑"等强度词，<b>也未使用"不一致""冲突""矛盾""无法证明"等判断词</b>。冲突版用的是「只有很小的变化」「差别不大」「并没有呈现同样明显的变化」——描述事实，不下结论。</td>
+      </tr>
+      <tr>
+        <td><b>6. 冲突是否过于明显？</b></td>
+        <td><span class="tag warn">需预测试</span></td>
+        <td>本轮已把差异压缩到<b>一句话</b>：信息二的后半句。两版的信息二<b>标题完全相同</b>（同为「另一项观察指标」），差异只在正文最后一句。<br><b>但仍有一处提示性表述</b>：「第一项指标…第二项…并没有呈现同样明显的变化」是一句显式的对比，会让细心的读者较快察觉。这一句是<b>刻意保留的</b>——完全去掉会让普通人读不出差异；但若预测试发现 Q2/Q3 正确率接近 100%，这一句就是首要的弱化对象。<br><b>处置</b>：用「⑥ 材料理解自检」做预测试，目标正确率区间 <b>80%–95%</b>。</td>
+      </tr>
+      <tr>
+        <td><b>7. 参与者是否可能猜到研究目的？</b></td>
+        <td><span class="tag ok">低—中</span>（较上版下降）</td>
+        <td>本轮消除了三个主要线索：<br>① 删除了证据三的裁判式专家结论——被试现在<b>必须自己</b>比较前两项结果，不会被告知"这里有问题"；<br>② 核验区标题从「你<b>想进一步核实</b>这条消息吗？」改为中性的「如果你<b>希望进一步了解</b>这项研究，可以查看以下相关材料」；<br>③ AI 标签改为真实平台常见的「AI 辅助 ⓘ」灰色 chip，不再是通栏说明文字。<br><b>残留风险</b>：AI 标签本身仍在提示研究主题（这是自变量的必然属性，无法消除）。处置：加入一个与主任务无关的填充题（如"请评价这则新闻的写作风格"）。</td>
+      </tr>
+      <tr>
+        <td><b>8. 是否需要专业知识？</b></td>
+        <td><span class="tag ok">不需要</span>（较上版改善）</td>
+        <td>普通读者只需理解一件事：<b>「第一项结果明显改善了，第二项结果好像没有跟着改善。」</b><br>本轮已确认正文中：<b>p 值出现 0 次</b>（全部移入折叠区「查看详细数据」）、<b>统计术语出现 0 次</b>（"统计显著""显著水平"等一律删除）、<b>专业指标名在正文中出现 0 次</b>（正文只写"另一项与眼睛状态有关的指标"；指标名"眼表状态指标"仅出现在折叠区）。数字（15 分 / 3 分 / +1.6 秒 / +0.2 秒）保留在第二层作为"数据感"，但理解结论不依赖它们。</td>
+      </tr>
+      <tr>
+        <td><b>9. 验证行为是否真的代表"验证"？</b></td>
+        <td><span class="tag warn">部分代表</span></td>
+        <td>4 个入口都包含能<b>改变判断</b>的实质信息（原始数据表含两实验室分歧、机构说明承认"无法确定"、独立媒体持质疑角度、事实核查给"部分属实、结论待定"），因此不是"点一下就算验证"。<br><b>但仍有两点不足</b>：① Demo 无法记录滚动与阅读深度，只看停留时长；② 4 个入口被"摆好"了，与真实环境的"自己去搜"仍有距离。处置：正式实验建议记录每个材料的滚动深度，并加入一个开放式问题"你还想查什么"。</td>
+      </tr>
+      <tr>
+        <td><b>10. 两个自变量是否可以被理论上区分？</b></td>
+        <td><span class="tag ok">可以</span></td>
+        <td>AI标识操纵的是「谁/什么生产了这条内容」（来源·生产过程层）；一致性操纵的是「这篇内容<span style="color:#b03a3a">内部</span>的几项结果是否互相支持」（内容·证据层）。两者分属不同层级，<b>三条来源标签在两版中逐字恒定</b>，因此构念上正交。这一点是本设计相对"来源可信度×内容"方案的决定性优势。<br><b>补充</b>：本轮把 AI 标签从"通栏说明文字"改为"简短 chip + 展开"，其<b>视觉位置（署名行下方）、字号、颜色、圆角、内边距三条件完全一致</b>，只改变文字（无 / AI 辅助 / AI 生成），不引入"人工是否撰写 / 核对"这一额外变量。</td>
+      </tr>
+      <tr>
+        <td><b>11. 专家 / 权威判断出现频率</b></td>
+        <td><span class="tag ok">0 次</span></td>
+        <td>一致版 0 次 / 冲突版 0 次（脚本实测）。这是本轮<b>最重要的修改之一</b>：原设计的证据三是「某三甲医院眼科医师访谈」，且直接评述前两项证据，会让被试<b>跳过自己的比较</b>直接采纳权威结论，把结果污染的路径从「线索冲突 → 验证行为」变成「统计理解困难 → 依赖权威来源」。现在证据三改为研究背景信息，不含任何判断。</td>
+      </tr>
+      <tr>
+        <td><b>12. 正文中的统计术语与 p 值</b></td>
+        <td><span class="tag ok">0 次</span></td>
+        <td>p 值 0 次、统计术语 0 次（脚本实测）。所有统计信息收进默认收起的折叠区「查看详细数据」。<b>重要的下游影响</b>：p 值被移出正文后，"看懂数字的能力"不再是一个混淆变量；想看到统计数字的人必须去折叠区或核验材料，这本身也是可记录的信息行为。</td>
+      </tr>
+      <tr>
+        <td><b>13. 三张信息卡的视觉突出程度</b></td>
+        <td><span class="tag ok">等权</span></td>
+        <td>三张卡使用<b>完全相同的样式</b>：同背景、同左边条颜色与宽度、同内边距、同标题字号、同正文字号、同来源行样式，卡片之间无顺序暗示。<br><b>刻意未采用的做法</b>：没有给每张卡加"护眼模式组：明显下降 ｜ 普通设置组：变化较小"式的两行对照摘要——那会让冲突在<b>一眼扫读</b>中暴露，滑向"过于明显"。该版本保留为开发者开关（顶部「证据速览行」，<b>默认关闭</b>），你可以打开自行对比。</td>
+      </tr>
+      <tr>
+        <td><b>14. 开发者开关是否污染正式材料？</b></td>
+        <td><span class="tag ok">默认关闭</span></td>
+        <td>「证据速览行」默认关闭；「高亮改动位置」只影响研究者视图。<b>正式实验前请确认两个开关都处于关闭状态</b>（顶部按钮的方块未点亮）。</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="background:#fdf6e9">
+          <b>⚠️ 审计发现的最大遗留问题：信息完整度仍然不对称（本轮已减轻，但未消除）</b><br>
+          冲突版把"另一项指标没有明显变化"这一<b>与核心结论不完全一致的结果</b>放进了正文，而一致版没有。这意味着：<b>冲突版在客观上更完整</b>（外部核验材料显示两个实验室结果本就不一致）。这会让"结果不一致"与"信息完整度"发生混淆。<br>
+          <b>本轮已减轻的地方</b>：① 冲突从"完全无效"弱化为"变化很小、差别不大"，负面程度下降；② 证据三不再提供任何判断，被试不会得到"这里有正反两面"的提示；③ 外部核验材料在两版中完全相同，且显示"两个实验室结果本就分歧"，因此一致版匹配实验室甲、冲突版匹配实验室乙，<b>两版都各有一项外部证据支持、一项不支持</b>。<br>
+          <b>仍未解决的地方</b>：正文层面的不对称是本操纵的固有属性，无法靠配平措辞消除。<b>处置</b>：① 在论文"研究局限"中明确写出；② 或加一个"信息量控制组"（同长度、同信息数、但三项结果全为中性）来证明效应不来自信息量。详见「⑤ 分析与风险」。
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>字数核对（一致性核对用）</h3>
+  <div id="lenCheck" class="small"></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ⑤ 分析与风险 -->
+<!-- ============================================================ -->
+<div class="pane" id="p5">
+  <h2>⑤ 分析与风险</h2>
+
+  <h3>1. 这个材料为什么理论上有可能产生「AI标识 × 内容证据一致性」的交互？</h3>
+  <p>核心依据是 <b>Chaiken &amp; Maheswaran (1994)</b> 的原始实验：当内容与可信度启发式<b>相矛盾</b>时，<b>仅由系统式加工决定态度</b>；当内容<b>不矛盾</b>时，系统式与启发式加工各自独立地决定态度。</p>
+  <table class="t">
+    <thead><tr><th style="width:18%">条件</th><th style="width:41%">按 Chaiken &amp; Maheswaran (1994) 推演的心理过程</th><th>对本材料的预期</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>有AI标识 × 证据一致</b></td>
+        <td>AI 标识提供一条来源启发式（"机器生成/无人工监督"）；三组证据方向一致，<b>没有反证挑战这条启发式</b> → 启发式独自完成判断</td>
+        <td>AI 标识的效应<b>被放大</b>：可信度下降最明显，且判断成本最低、最不需要核验</td>
+      </tr>
+      <tr>
+        <td><b>有AI标识 × 证据冲突</b></td>
+        <td>证据内部出现方向相反的结果 → <b>内容与启发式推断相矛盾</b> → 系统式加工接管，判断更多依赖证据本身质量</td>
+        <td>AI 标识的效应<b>被削弱</b>：可信度判断转向证据评价，核验倾向上升</td>
+      </tr>
+      <tr>
+        <td><b>无AI标识 × 证据一致</b></td>
+        <td>无来源启发式被激活（默认"人工撰写"）→ 判断由内容线索主导</td>
+        <td>可信度基线最高，核验倾向最低</td>
+      </tr>
+      <tr>
+        <td><b>无AI标识 × 证据冲突</b></td>
+        <td>无来源启发式，但内容内部矛盾 → 触发内容层面的系统式加工</td>
+        <td>可信度中等，核验倾向较高（但小于 AI 标识 × 冲突？——这是需要检验的）</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <b>⭐ 这个交互方向是反直觉的，需要特别注意。</b><br>
+    多数人的直觉是"冲突 → AI 标识的负面效应叠加、更强"。但 Chaiken &amp; Maheswaran (1994) 的逻辑相反：<b>冲突条件下系统式加工接管，启发式（AI 标识）的作用反而被削弱</b>；一致条件下启发式独自决定判断，AI 标识的作用被放大。<br>
+    因此建议把核心假设写为：<b>「在证据一致的条件下，AI 标识对感知可信度的负向效应强于证据冲突条件」</b>，并准备两个方向的解释预案。
+  </div>
+
+  <h3>2. 六条件放在一起看，参与者最可能在哪里困惑？</h3>
+  <table class="t">
+    <thead><tr><th style="width:26%">困惑点</th><th style="width:11%">风险</th><th>说明与处置</th></tr></thead>
+    <tbody>
+      <tr><td><b>「AI辅助生成」到底算不算"标注了AI"</b></td><td><span class="tag warn">高</span></td><td>MC1 让被试在"没有 / AI辅助 / AI生成"三选一，但现实中很多人会把"AI辅助"也归为"有AI"。<b>处置</b>：MC1 采用两段式——先问"是否有任何AI相关标注"（有/没有/记不清），再问"如果是，标注的具体表述是哪一种"。这样才能分辨是"没读到"还是"读到了但归类不同"。</td></tr>
+      <tr><td><b>把"证据冲突"读成"新闻是假的"</b></td><td><span class="tag bad">高</span></td><td>一旦被试把主观/客观分歧读成"这则新闻在造假"，因变量会从"验证行为"漂移到"真假识别"。<b>处置</b>：MC4 必须保留；若冲突组 MC4 显著更高，材料需要进一步弱化冲突措辞。</td></tr>
+      <tr><td><b>把"证据冲突"读成"信息不足 / 需要更多信息"</b></td><td><span class="tag warn">中高</span></td><td>冲突版会让被试产生"信息不够"的感受，从而与"信息充分性"混淆。<b>处置</b>：测量感知充分性作为<b>中介</b>而非自变量（这正是上一份报告的建议），并在论文中明确"冲突是充分性缺口的前因"。</td></tr>
+      <tr><td><b>把材料入口当成任务要求</b></td><td><span class="tag ok">已消除</span></td><td>原措辞「你<b>想进一步核实</b>这条消息吗？」本身在暗示应该去核实。本轮已改为中性的「如果你<b>希望进一步了解</b>这项研究，可以查看以下相关材料」，并且把「暂不查看其他材料」提到<b>第一位</b>、与其余四项视觉权重完全相等（同边框、同字号、同内边距，无虚线、无默认高亮）。</td></tr>
+      <tr><td><b>看不懂数字 → 转而依赖专家</b></td><td><span class="tag ok">已消除</span></td><td>原设计的证据三是"三甲医院眼科医师访谈"，且直接评述前两项证据——被试只要读证据三就知道该信什么，<b>不需要自己比较证据一和证据二</b>，实际测到的可能是"统计理解困难 → 依赖权威"而非"线索冲突 → 验证行为"。本轮：① 证据三改为不含判断的研究背景信息；② 正文中的 p 值与统计术语全部清除。<b>现在被试只能靠自己读那句话来判断两项结果是否对得上。</b></td></tr>
+      <tr><td><b>冲突的那句对比会不会太直白</b></td><td><span class="tag warn">本轮新增风险</span></td><td>冲突版信息二结尾是「两项结果并没有呈现同样明显的变化」——这是一句<b>显式的对比</b>，是本设计里唯一"指引读者去比较"的表述。<br><b>它被保留是刻意的</b>：完全删掉，普通人很可能读不出差异（就退回到"理解门槛过高"）。但它也是"过于明显"的主要来源。<br><b>处置</b>：用「⑥ 材料理解自检」测 Q2/Q3 正确率。落在 80%–95% 就保留；接近 100% 则把它弱化为「两项结果的变化幅度有所不同」。<b>这是本轮最需要你用预测试数据拍板的一处。</b></td></tr>
+      <tr><td><b>三张信息卡是否需要"两行摘要"</b></td><td><span class="tag info">开发者可自行对比</span></td><td>你的指令里建议把信息一、信息二做成「护眼模式组：明显下降 ｜ 普通设置组：变化较小」式的两行对照。<b>我没有默认采用</b>，因为它会让冲突在<b>一眼扫读</b>中暴露（两卡并列时"也出现明显改善"vs"只有较小变化"对比过强），滑向"过于明显"。<br>但它确实能降低理解门槛，所以做成了顶部开关「<b>证据速览行</b>」（默认关闭）。<b>建议做法</b>：先不开，跑一轮自检；若 Q2/Q3 正确率 &lt; 80%，再打开重跑一次，比较两组的正确率差异。</td></tr>
+      <tr><td><b>怀疑"两个实验室为什么结果不同"而分心</b></td><td><span class="tag warn">中</span></td><td>外部材料中"实验室甲 +1.6 秒 / 实验室乙 +0.2 秒"可能引发被试对研究本身质量的怀疑，从而干扰主判断。<b>处置</b>：在机构说明中已保留一句"两实验室使用同一批受试者、同型号设备，差异主要来自测量时点与操作者判读"，把分歧归因于<b>正常的方法学差异</b>而非"研究有问题"。</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3. 已知的、必须在论文中交代的两个限制</h3>
+  <div class="note warn-n">
+    <b>限制一：信息完整度天然不对称（本轮已减轻，但未消除）。</b>冲突版必然包含一条与核心结论不完全一致的结果。这是"内部一致性"操纵的固有属性，无法通过配平措辞完全消除。<b>本轮减轻之处</b>：冲突从"完全无效"弱化为"变化很小、差别不大"；证据三不再提供任何判断，被试不会得到"这里有正反两面"的提示。<b>建议</b>：在论文的"研究局限"中明确写出，并考虑加一个"信息量控制组"（同长度、同信息数、但三项结果全为中性/无关）来证明效应不是来自信息量。
+  </div>
+  <div class="note warn-n">
+    <b>限制二：外部材料的"答案倾向"。</b>本 Demo 的外部材料（机构说明"无法给出确定结论"、独立媒体持质疑角度、事实核查判"部分属实、结论待定"）整体<b>偏向"结论尚不确定"</b>。这意味着核验之后，无论哪个条件，被试的可信度判断都可能下降。这本身是真实的（该领域确实无定论），但会压缩"AI 标识"的效应空间。<br><b>注</b>：本轮已把外部材料里的"专家指出"改为"受访研究者指出"，避免正文与外部材料同时出现权威判断。
+  </div>
+  <div class="note ok-n">
+    <b>本轮新增的一个正面变化：DV 的"纯度"提高了。</b>由于 p 值与统计术语已移出正文、收进折叠区，如果被试想看统计数字，<b>必须主动去点开折叠区或外部材料</b>——这个动作本身就是可记录的信息行为（建议在正式实验里把"展开折叠区"也记进 <code>verification_type</code>）。这比旧版"正文里就有 p 值、想不想看都一样"更能区分主动验证与被动阅读。
+  </div>
+
+  <h3>4. 统计检验路径（正式实验）</h3>
+  <ul class="dot">
+    <li><b>操作检验</b>：以 <code>ai_manipulation_check</code> 为因变量做卡方检验（预期：三组对其标识的识别率均 &gt; 85%）；以 <code>consistency_manipulation_check</code> 为因变量做独立样本 t 检验（预期：一致组显著高于冲突组，效应量 Cohen's d 建议 &gt; 0.8）。</li>
+    <li><b>主效应与交互</b>：以 <code>credibility</code> 为因变量做 3×2 被试间方差分析（AI_label 三水平、evidence_consistency 二水平）。重点看交互项 <code>AI_label × evidence_consistency</code>。</li>
+    <li><b>行为因变量</b>：<code>verification</code>（0/1）用二元 logistic 回归；<code>verification_count</code>（0–4）用 Poisson 或负二项回归；<code>verification_type</code> 用多项 logistic 或做各入口的二分类分解。</li>
+    <li><b>有调节的中介</b>：自变量 AI_label（多分类，用 indicator 或 sequential coding）→ 中介 credibility → 因变量 verification，调节变量 evidence_consistency（PROCESS Model 7）。</li>
+    <li><b>备择因变量（强烈建议同时测量）</b>：<code>need_verification</code> 与信息回避。依据：Wang et al. (2025, N=3,920) 的随机实验发现冲突<b>降低</b>信息寻求意向——若你的验证行为结果与之相符，需要回避变量来解释机制。</li>
+    <li><b>不预设交互显著</b>。若交互不显著，主效应模型仍有报告价值，但需要在讨论中说明与 Chaiken &amp; Maheswaran (1994) 的差异（当代媒体情境、单一来源线索而非共识线索等）。</li>
+  </ul>
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- ⑥ 材料理解自检（开发者测试） -->
+<!-- ============================================================ -->
+<div class="pane" id="p6">
+  <h2>⑥ 材料理解自检（开发者测试）</h2>
+  <p class="sub">这是给研究者用的开发测试页，<b>不进入正式实验、不写入被试数据</b>。目的：验证普通读者在<b>不理解 p 值、不了解专业指标</b>的前提下，能否仅凭正文的自然语言答对下面几题。</p>
+
+  <div class="note warn-n">
+    <b>使用方式</b><br>
+    ① 用顶部矩阵选一个条件 → ② 到「① 刺激材料对比」读一遍那则新闻（<b>请不要展开折叠区</b>，模拟普通读者）→ ③ 回到本页作答。<br>
+    找 3–5 个非心理学专业的同学各做一遍，比研究者自己判断更可靠。
+    <hr style="margin:10px 0;border:none;border-top:1px solid #eddfc4">
+    当前条件：<b id="qCondName">无AI标识 × 证据一致</b>　<span class="small" id="qCondCode">AI_label=0 · evidence_consistency=0</span>
+  </div>
+
+  <div id="qMount"></div>
+
+  <div class="row" style="margin-top:18px">
+    <button class="btn" id="btnQuizSubmit">提交本次自检</button>
+    <button class="btn sec" id="btnQuizClear">清空自检记录</button>
+  </div>
+
+  <div id="qResult" style="margin-top:16px"></div>
+
+  <h3>自检累计结果（按条件）</h3>
+  <div id="qTable" class="small">（暂无记录）</div>
+
+  <h3>判定标准</h3>
+  <ul class="dot">
+    <li><b>Q2 / Q3 正确率 ≥ 80%</b> → 操纵可被普通读者识别，<span class="tag ok">理解门槛合适</span></li>
+    <li><b>Q2 / Q3 正确率 60%–80%</b> → 偏难，建议再弱化一点表述，或允许展开折叠区</li>
+    <li><b>Q2 / Q3 正确率 &lt; 60%</b> → <span class="tag bad">理解门槛过高</span>，必须继续降低门槛</li>
+    <li><b>冲突版 Q2/Q3 正确率 &gt; 95% 且 Q4 大量选「明显有问题」</b> → <span class="tag warn">过于明显</span>，已滑向真假判断</li>
+  </ul>
+</div>
+
+  <!-- ⑦ 预测试参与者作答（研究者可见，含 condition；参与者页面不显示此标签） -->
+  <div class="pane" id="p7">
+    <h2>⑦ 预测试参与者作答（本机累计）</h2>
+    <p class="sub">参与者在「预测试模式」下的作答。字段含 material condition（<b>研究者可见，参与者页面不可见</b>），无个人信息。数据存于本机浏览器，刷新不丢失；换设备需参与者用完成页「复制我的回答」发给研究者。</p>
+    <div class="row" style="margin:12px 0">
+      <button class="btn sec" id="btnPilotCsv">下载预测试 CSV</button>
+      <button class="btn sec" id="btnPilotJsonAll">下载预测试 JSON</button>
+      <button class="btn sec" id="btnPilotClear">清空本机预测试记录</button>
+    </div>
+    <div id="pilotTable" class="small">（暂无记录）</div>
+  </div>
+
+</div><!-- /shell -->
+</div><!-- /researcherMode -->
+
+<div class="toast" id="toast"></div>
+<button id="researcherEntry" class="researcher-entry" title="研究者入口（被试不可见）">研究者</button>
+<button id="researcherBack" class="researcher-back">← 返回预测试</button>
+
+<script>
+/* ============================================================
+   数据模型
+   ============================================================ */
+const AI_LABELS = [
+  { id:0, txt:"无标识",     full:"无AI标识" },
+  { id:1, txt:"AI辅助生成", full:"AI辅助生成" },
+  { id:2, txt:"AI生成",     full:"AI生成" }
+];
+const CONS = [
+  { id:0, txt:"证据一致", full:"证据一致" },
+  { id:1, txt:"证据冲突", full:"证据冲突" }
+];
+
+/* AI披露标签 —— 视觉规格三条件一致，主标签只操纵「AI 参与程度」一个维度 */
+const AI_DISCLOSURE = {
+  0: null,
+  1: { label:"AI 辅助", note:"本文的写作过程使用了 AI 辅助工具。" },
+  2: { label:"AI 生成", note:"本文的内容由 AI 系统自动生成。" }
+};
+/* 兼容旧引用名 */
+const AI_TEXT = {
+  0: null,
+  1: AI_DISCLOSURE[1].label + " ⓘ",
+  2: AI_DISCLOSURE[2].label + " ⓘ"
+};
+
+/* ============================================================
+   证据模块
+   —— 证据一 / 证据三 为两版共享常量（逐字相同）
+   —— 只有证据二的后半句不同：这就是第二自变量的全部操纵位置
+   ============================================================ */
+const EV1 = {
+  t:"参与者的自我感受",
+  b:"四周结束后，使用护眼模式的学生报告说，眼睛的疲劳程度平均下降了约 15 分；普通设置组下降了约 3 分（采用 0—100 分的疲劳自评表，分数越低，表示越不容易感到疲劳）。也就是说，使用护眼模式的学生普遍表示，眼睛没有以前那么容易疲劳。",
+  s:"人因工程实验室《屏幕使用与视觉舒适度》项目报告",
+  sum:"护眼模式组：疲劳感明显下降　｜　普通设置组：变化较小"
+};
+
+const EV2_PRE = "研究人员同时用仪器测量了另一项与眼睛状态有关的指标。四周后，使用护眼模式的学生，这项指标";
+
+const EV2 = {
+  0:{ t:"另一项观察指标",
+      post:"也出现了比较明显的改善，普通设置组的变化较小，两项结果的变化方向基本一致。",
+      s:"人因工程实验室 · 眼表状态测试记录",
+      sum:"护眼模式组：也出现明显改善　｜　普通设置组：变化较小" },
+  1:{ t:"另一项观察指标",
+      post:"只有很小的变化，与普通设置组差别不大，两项结果并没有呈现出同样明显的变化。",
+      s:"人因工程实验室 · 眼表状态测试记录",
+      sum:"护眼模式组：只有较小的变化　｜　普通设置组：变化较小" }
+};
+
+const EV3 = {
+  t:"研究背景",
+  b:"研究团队介绍，本次测试关注的是日常手机使用场景下的眼部舒适度。参与研究的学生来自三所高校，测试持续四周。研究人员还记录了每名参与者每天的手机使用时长与睡眠时间，这部分数据后续将继续整理。",
+  s:"人因工程实验室 · 项目背景说明",
+  sum:"参与者来自三所高校，测试持续四周，另有睡眠与使用时长的数据待整理"
+};
+
+/* 折叠区（统计数字与专业指标名只出现在这里，两版仅一处数值不同、长度相等） */
+const FOLD_PRE  = "主观疲劳评分（0—100 分，分数越低表示越不容易感到疲劳）：护眼模式组平均下降 15.4 分，普通设置组平均下降 2.8 分。眼表状态指标：护眼模式组平均变化 ";
+const FOLD_DELTA= { 0:"+1.6", 1:"+0.2" };
+const FOLD_POST = " 秒，普通设置组平均变化 +0.1 秒。";
+
+/* 旧结构保留（供审计脚本比对） */
+const EVIDENCE = {
+  0:[EV1, {t:EV2[0].t, b:EV2_PRE+EV2[0].post, s:EV2[0].s}, EV3],
+  1:[EV1, {t:EV2[1].t, b:EV2_PRE+EV2[1].post, s:EV2[1].s}, EV3]
+};
+
+
+/* 跨条件完全相同的部分 */
+const CONST_PARTS = {
+  kicker:"科技生活 · 实测",
+  title:"“护眼模式”能缓解视疲劳吗？一项为期四周的对照实测",
+  source:"星海网",
+  ch:"科技生活频道",
+  author:"本刊记者 林述",
+  date:"2026年9月12日 09:30",
+  cap:"图为实验中使用的一部手机：开启护眼模式后，屏幕色温明显偏暖。",
+  lead:"长时间使用手机后眼睛发涩、发酸，是很多人熟悉的体验。近年来，不少手机厂商在系统中内置了“护眼模式”，通过降低蓝光比例、调整屏幕色温来减轻视觉不适。这类功能到底有没有实际作用，一直存在不同说法。近日，一项针对在校大学生的对照实测结果发布，为这一话题提供了新的数据。",
+  p1:"这项研究由某高校人因工程实验室开展。研究招募了 96 名每天使用手机超过 4 小时的学生，随机分为「开启护眼模式」的干预组与「维持常规屏幕设置」的对照组，每组 48 人，持续四周。测试开始前和结束后，研究团队分别请受试者填写了一份疲劳自评表，并用仪器测量了一项与眼睛状态有关的指标。研究认为，四周的护眼模式使用与视疲劳的缓解存在关联。",
+  evHead:"研究团队提供的信息如下：",
+  p2:"研究团队表示，所有数据均已存档，可供同行复核。不过，围绕“护眼模式”实际作用的讨论并未因此结束。有受访者认为，这类功能的实际感受因人而异；也有观点认为，四周的观察周期仍偏短，且受试者全部来自同一所学校，结果的推广范围需要谨慎看待。",
+  foot:"本文所涉数据与研究材料均由人因工程实验室提供。文中人物为化名。平台不对本文结论作背书，读者可自行查阅原始材料。"
+};
+
+/* ============================================================ */
+/* SVG 配图（6 条件完全相同） */
+/* ============================================================ */
+const FIGURE_SVG = `
+<svg viewBox="0 0 1200 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="手机护眼模式配图">
+  <rect width="1200" height="440" fill="#F3EDE3"/>
+  <circle cx="150" cy="90" r="130" fill="#EDE4D6"/>
+  <circle cx="1080" cy="380" r="160" fill="#E9DFCE"/>
+  <rect x="120" y="300" width="300" height="14" rx="7" fill="#E2D7C4"/>
+  <rect x="150" y="316" width="240" height="10" rx="5" fill="#E7DCCA"/>
+  <rect x="470" y="52" width="264" height="340" rx="34" fill="#33302C"/>
+  <rect x="484" y="66" width="236" height="312" rx="24" fill="#F7CB84"/>
+  <rect x="508" y="98" width="188" height="15" rx="7.5" fill="#EBB367" opacity="0.85"/>
+  <rect x="508" y="128" width="140" height="12" rx="6" fill="#EBB367" opacity="0.7"/>
+  <rect x="508" y="178" width="188" height="88" rx="10" fill="#EFBE74" opacity="0.75"/>
+  <rect x="508" y="286" width="112" height="12" rx="6" fill="#EBB367" opacity="0.7"/>
+  <rect x="508" y="312" width="164" height="12" rx="6" fill="#EBB367" opacity="0.55"/>
+  <circle cx="880" cy="120" r="44" fill="#E4D8C4"/>
+  <circle cx="862" cy="112" r="37" fill="#F3EDE3"/>
+  <path d="M830 250 C 880 218, 950 218, 1000 250" stroke="#DCCFB9" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <path d="M846 282 C 888 256, 942 256, 984 282" stroke="#DCCFB9" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <circle cx="915" cy="196" r="12" fill="#CDBFA6"/>
+</svg>`;
+
+/* ============================================================ */
+/* 渲染：新闻页面
+   opt = { highlight:bool, forFlow:bool }
+   ============================================================ */
+function renderNews(ai, cons, opt){
+  opt = opt || {};
+  const hl = !!opt.highlight, showSum = !!opt.sum;
+  const disc = AI_DISCLOSURE[ai];
+  const e2 = EV2[cons];
+  const post  = hl ? `<span class="hl">${e2.post}</span>` : e2.post;
+  const delta = hl ? `<span class="hl">${FOLD_DELTA[cons]}</span>` : FOLD_DELTA[cons];
+
+  const card = (e, body) => `
+    <div class="ev">
+      <div class="ev-t">${e.t}</div>
+      ${showSum ? `<div class="ev-sum">${e.sum}</div>` : ''}
+      <div class="ev-b">${body===undefined ? e.b : body}</div>
+      <div class="ev-s">来源：${e.s}</div>
+    </div>`;
+
+  return `
+  <div class="news-site">
+    <div class="ns-head">
+      <div class="ns-logo">星海<em>网</em></div>
+      <div class="ns-nav"><span>首页</span><span>科技生活</span><span>健康</span><span>辟谣</span></div>
+    </div>
+    <div class="ns-body">
+      <div class="ns-kicker">${CONST_PARTS.kicker}</div>
+      <h1 class="ns-title">${CONST_PARTS.title}</h1>
+      <div class="ns-meta">
+        <span class="src">${CONST_PARTS.source} · ${CONST_PARTS.ch}</span>
+        <span>${CONST_PARTS.author}</span>
+        <span>${CONST_PARTS.date}</span>
+        <span>阅读 1.2 万</span>
+      </div>
+
+      ${ disc ? `<div class="ai-wrap">
+        <span class="ai-chip" role="button" tabindex="0" aria-label="展开披露说明">${disc.label}<i class="ii">i</i></span>
+        <div class="ai-note${S.aiOpen?' on':''}">${disc.note}</div>
+      </div>` : `` }
+
+      <div class="ns-figure">${FIGURE_SVG}<div class="ns-cap">${CONST_PARTS.cap}</div></div>
+
+      <p class="ns-lead">${CONST_PARTS.lead}</p>
+      <p class="ns-p">${CONST_PARTS.p1}</p>
+
+      <h4 class="ns-h4">${CONST_PARTS.evHead}</h4>
+      ${card(EV1)}
+      ${card(e2, EV2_PRE + post)}
+      ${card(EV3)}
+
+      <details class="fold"${hl?' open':''}>
+        <summary>查看详细数据</summary>
+        <div class="dc">${FOLD_PRE}${delta}${FOLD_POST}</div>
+      </details>
+
+      <p class="ns-p" style="margin-top:18px">${CONST_PARTS.p2}</p>
+      <div class="ns-foot">${CONST_PARTS.foot}</div>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   核验材料（6 条件完全相同）
+   ============================================================ */
+const VERIFY = [
+  {
+    key:"raw", icon:"A", t:"查看原始实验数据",
+    d:"项目数据摘要表（n = 96），含主观评分与另一项观察指标的分实验室结果。",
+    body:`
+      <h4 style="font-size:13.5px;font-weight:600;margin-bottom:8px">项目原始数据摘要（n = 96）</h4>
+      <table class="t">
+        <thead><tr><th>指标</th><th>护眼模式组（n=48）</th><th>普通设置组（n=48）</th><th>组间差异</th></tr></thead>
+        <tbody>
+          <tr><td>疲劳自评评分（0—100 分）</td><td>−15.4</td><td>−2.8</td><td>差异明显（p = .012）</td></tr>
+          <tr><td>眼表状态指标（秒）· 实验室甲</td><td>+1.6</td><td>+0.1</td><td>差异明显（p = .03）</td></tr>
+          <tr><td>眼表状态指标（秒）· 实验室乙</td><td>+0.2</td><td>+0.1</td><td>差异不明显（p = .41）</td></tr>
+        </tbody>
+      </table>
+      <p class="small">备注：两家合作实验室对<b>同一批受试者</b>、使用同型号设备分别测量这一项指标，结果并不一致。差异主要来自测量时点（上午 / 下午）与操作者判读标准。</p>
+      <p class="small">研究团队在报告附录中注明：「这一项指标的结果存在分歧，需更大样本与更长周期验证。」</p>`
+  },
+  {
+    key:"inst", icon:"B", t:"查看研究机构公开说明",
+    d:"实验室就该研究发布的公开说明，写明了结论的适用范围。",
+    body:`
+      <h4 style="font-size:13.5px;font-weight:600;margin-bottom:8px">人因工程实验室 · 关于本项研究的说明</h4>
+      <p class="small">本研究中，开启护眼模式的一组在四周后自评疲劳程度下降的幅度大于另一组，这一差异在统计上明显。</p>
+      <p class="small">但在另一项观察指标上，两家合作实验室测得的结果不一致：实验室甲观察到较明显的变化，实验室乙没有观察到明显变化。两实验室使用同一批受试者与同型号设备，差异主要来自测量时点与判读标准。</p>
+      <p class="small">因此，我们目前<b>无法就护眼模式在这一项指标上的作用给出确定结论</b>，也不能排除自评改善部分来自受试者对「被干预」的感知。相关数据已公开，供同行复核。</p>
+      <p class="small" style="color:#82828c">—— 发布于 2026 年 9 月</p>`
+  },
+  {
+    key:"media", icon:"C", t:"查看另一家独立媒体报道",
+    d:"另一家媒体对同一项研究的报道，角度与原文有所不同。",
+    body:`
+      <h4 style="font-size:13.5px;font-weight:600;margin-bottom:8px">《“护眼模式”效果再受质疑：另一项指标的结果出现分歧》</h4>
+      <p class="small">……继此前多项研究得出不同结论后，这项新研究同样未能给出统一答案。</p>
+      <p class="small">有受访研究者指出，目前市面上多数「护眼模式」仅调整色温与亮度，其对眼表状态的影响在文献中并不一致；对普通用户而言，减少连续用眼时长、增加远眺与眨眼频率，仍是更被广泛认可的做法。</p>
+      <p class="small">报道同时提到，该研究的<b>自评评分结果</b>与其他几项研究方向一致，但另一项指标的分歧使结论难以确定。</p>
+      <p class="small" style="color:#82828c">—— 摘自 2026 年 9 月 13 日另一家媒体报道</p>`
+  },
+  {
+    key:"fact", icon:"D", t:"查看事实核查信息",
+    d:"第三方事实核查平台对该说法逐条核对后的结论。",
+    body:`
+      <h4 style="font-size:13.5px;font-weight:600;margin-bottom:8px">核查结论：部分属实，结论待定</h4>
+      <ul class="dot" style="font-size:13px">
+        <li>该研究确实存在，样本 96 人，为期四周 —— <b>属实</b></li>
+        <li>「护眼模式能明显缓解视疲劳」 —— 自评评分维度成立；另一项指标的证据不一致，<b>尚不足以支持确定结论</b></li>
+        <li>部分厂商宣传「护眼模式可消除蓝光危害」 —— <b>夸大，缺乏依据</b></li>
+        <li>建议：可将此类功能视为「降低夜间屏幕刺眼感」的辅助设置，不宜作为缓解视疲劳的主要手段</li>
+      </ul>
+      <p class="small" style="color:#82828c">—— 第三方事实核查平台，2026 年 9 月 14 日</p>`
+  }
+];
+
+/* ============================================================
+   状态
+   ============================================================ */
+const S = {
+  ai:0, cons:0, highlight:true, sum:false, aiOpen:false,
+  mode:"browse",           // browse | flow
+  cur:null,                // 当前被试记录
+  all:[],                  // 全部被试记录
+  quiz:[],                 // 材料理解自检记录（开发者测试，不入正式数据）
+  readStart:null,
+  pilot:null,              // 当前预测试记录（进行中）
+  pilotAll:[],             // 预测试累计记录（本机）
+  pilotStart:null
+};
+let pidSeq = 1;
+
+function newParticipant(ai, cons){
+  pidSeq++;
+  return {
+    participant_id: "P" + String(pidSeq).padStart(3,"0") + "-" + Math.random().toString(36).slice(2,6).toUpperCase(),
+    AI_label: ai,
+    evidence_consistency: cons,
+    credibility: null,
+    verification: 0,
+    verification_count: 0,
+    verification_type: [],
+    verification_time: [],
+    verification_order: [],
+    final_judgment: null,
+    need_verification: null,
+    judgment_confidence: null,
+    ai_manipulation_check: null,
+    consistency_manipulation_check: null,
+    resolvability_check: null,
+    false_info_check: null,
+    reading_time_sec: null,
+    _verifyOpen: {},
+    _verifyT0: {},
+    _verifyDwell: {}
+  };
+}
+
+/* ============================================================
+   UI 工具
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("on"), 1800);
+}
+function condName(ai, cons){
+  return AI_LABELS[ai].full + " × " + CONS[cons].full;
+}
+function aiDescText(ai){
+  const d = AI_DISCLOSURE[ai];
+  return d ? `标签「${d.label} ⓘ」 → 展开：「${d.note}」` : "（本条件不渲染任何标识节点）";
+}
+
+/* ============================================================
+   矩阵切换器
+   ============================================================ */
+function buildMatrix(){
+  const rows = [];
+  rows.push(`<div></div>` + AI_LABELS.map(a=>`<div class="mx-h">${a.full}</div>`).join(''));
+  CONS.forEach(c=>{
+    rows.push(`<div class="mx-rh">${c.full}</div>`);
+    AI_LABELS.forEach(a=>{
+      rows.push(`<button class="mx-btn" data-ai="${a.id}" data-cons="${c.id}">
+        ${a.txt} × ${c.txt}<span class="code">${a.id} / ${c.id}</span></button>`);
+    });
+  });
+  $("#matrix").innerHTML = rows.join('');
+  $$("#matrix .mx-btn").forEach(b=>{
+    b.addEventListener("click", ()=> setCond(+b.dataset.ai, +b.dataset.cons, true));
+  });
+}
+
+function setCond(ai, cons, fromClick){
+  S.ai = ai; S.cons = cons;
+  $$("#matrix .mx-btn").forEach(b=>{
+    b.classList.toggle("on", +b.dataset.ai===ai && +b.dataset.cons===cons);
+  });
+  const nm = condName(ai,cons);
+  $("#tCondName").textContent = nm;
+  $("#tCondCode").textContent = `AI_label=${ai} · evidence_consistency=${cons}`;
+  $("#p1CondName").textContent = nm;
+  $("#p1AiText").textContent = aiDescText(ai);
+  // 「被试流程」页显示的始终是当前被试实际被分配到的条件，不随研究者切换而变动
+  if(S.mode==="flow" && S.cur){
+    $("#p2CondName").textContent = condName(S.cur.AI_label, S.cur.evidence_consistency);
+    $("#p2CondCode").textContent = `AI_label=${S.cur.AI_label} · evidence_consistency=${S.cur.evidence_consistency}`;
+  }else{
+    $("#p2CondName").textContent = nm;
+    $("#p2CondCode").textContent = `AI_label=${ai} · evidence_consistency=${cons}`;
+  }
+  renderAll();
+  refreshQuizCond();
+  // 条件切换后清空自检页上未提交的选择，避免带着上一条件的答案作答
+  $$("#qMount .opt").forEach(x=>x.classList.remove("on"));
+  if(fromClick) toast("已切换到：" + nm);
+}
+
+function renderAll(){
+  const opt = { highlight: S.highlight, sum: S.sum };
+  $("#newsMount1").innerHTML = renderNews(S.ai, S.cons, opt);
+  if(S.mode==="flow"){
+    $("#newsMount2").innerHTML = renderNews(S.cur ? S.cur.AI_label : S.ai,
+                                            S.cur ? S.cur.evidence_consistency : S.cons,
+                                            { highlight:false, sum:S.sum });
+  }
+  const sw = $("#swHl"); if(sw) sw.classList.toggle("on", S.highlight);
+  const ss = $("#swSum"); if(ss) ss.classList.toggle("on", S.sum);
+  updateLenCheck();
+  refreshJson();
+}
+
+/* ============================================================
+   字数核对
+   ============================================================ */
+function stripTags(html){ const d = document.createElement("div"); d.innerHTML = html; return d.textContent.replace(/\s/g,''); }
+/* 文章文本（不含 AI 披露标签，因为标签属于另一个自变量） */
+function articleText(cons){
+  const e2 = EV2[cons];
+  return CONST_PARTS.title + CONST_PARTS.lead + CONST_PARTS.p1 + CONST_PARTS.evHead +
+    EV1.t + EV1.b + EV1.s +
+    e2.t + EV2_PRE + e2.post + e2.s +
+    EV3.t + EV3.b + EV3.s +
+    FOLD_PRE + FOLD_DELTA[cons] + FOLD_POST +
+    CONST_PARTS.p2 + CONST_PARTS.foot;
+}
+/* 专业术语/统计词扫描 */
+const reP     = /p\s*[=＝]\s*\.?\d/g;                              // p 值
+const reStat  = /统计显著|显著性|显著性水平|未达显著|显著水平|置信区间|标准差|回归|方差/g;
+const reExpert= /专家|医师|医生|教授|权威|三甲/g;                    // 专家判断
+const rePro   = /泪膜|破裂时间|眼表状态指标/g;                        // 专业指标名
+const cnt = (s,re)=> (s.match(re)||[]).length;
+
+function updateLenCheck(){
+  const t0 = articleText(0), t1 = articleText(1);
+  const d = (x,y)=> (y-x===0 ? "0（完全相同）" : (y-x>0?"+":"") + (y-x));
+  const l1 = EV1.b.length, l2 = [0,1].map(c=>EV2_PRE.length+EV2[c].post.length), l3 = EV3.b.length;
+  const lf = [0,1].map(c=>(FOLD_PRE+FOLD_DELTA[c]+FOLD_POST).length);
+  const lp = [0,1].map(c=>EV2[c].post.length);
+  const htmlLen = [0,1,2].map(ai=>{
+    const a = renderNews(ai,0,{}).length, b = renderNews(ai,1,{}).length;
+    return `ai=${ai}: ${a} / ${b}（差 ${b-a}）`;
+  }).join('　｜　');
+  $("#lenCheck").innerHTML = `
+    <table class="t" style="margin-top:8px">
+      <thead><tr><th>核对项</th><th>一致版</th><th>冲突版</th><th>差值</th></tr></thead>
+      <tbody>
+        <tr><td><b>全文总字数</b>（标题＋导语＋正文＋三组信息＋折叠区＋页脚）</td><td><b>${t0}</b></td><td><b>${t1}</b></td><td><b>${d(t0,t1)}</b></td></tr>
+        <tr><td>信息一 正文字数（参与者自我感受，两版共享）</td><td>${l1}</td><td>${l1}</td><td>0（同一常量）</td></tr>
+        <tr><td>信息二 正文字数（<b>唯一操纵处</b>）</td><td>${l2[0]}</td><td>${l2[1]}</td><td>${d(l2[0],l2[1])}</td></tr>
+        <tr><td>信息二中的「结果方向」句（真正不同的那一句）</td><td>${lp[0]}</td><td>${lp[1]}</td><td>${d(lp[0],lp[1])}</td></tr>
+        <tr><td>信息三 正文字数（研究背景，两版共享）</td><td>${l3}</td><td>${l3}</td><td>0（同一常量）</td></tr>
+        <tr><td>折叠区字数（详细数据）</td><td>${lf[0]}</td><td>${lf[1]}</td><td>${d(lf[0],lf[1])}</td></tr>
+        <tr><td>信息组数 / 来源标签数</td><td>3 / 3</td><td>3 / 3</td><td>0（完全相同）</td></tr>
+        <tr><td>来源标签文本</td><td colspan="3">两版逐字相同（三条依次为：项目报告 / 眼表状态测试记录 / 项目背景说明）</td></tr>
+        <tr><td><b>正文中 p 值出现次数</b></td><td>${cnt(t0,reP)}</td><td>${cnt(t1,reP)}</td><td>0（<b>已移入折叠区</b>）</td></tr>
+        <tr><td><b>正文中统计术语出现次数</b></td><td>${cnt(t0,reStat)}</td><td>${cnt(t1,reStat)}</td><td>0（<b>已清除</b>）</td></tr>
+        <tr><td><b>正文中专家/权威判断出现次数</b></td><td>${cnt(t0,reExpert)}</td><td>${cnt(t1,reExpert)}</td><td>0（<b>已改为研究背景信息</b>）</td></tr>
+        <tr><td>专业指标名出现次数（含折叠区）</td><td>${cnt(t0,rePro)}</td><td>${cnt(t1,rePro)}</td><td>0（<b>仅出现在折叠区，正文 0 次</b>）</td></tr>
+        <tr><td>AI披露标签（主标签 / 展开说明）</td><td colspan="3">无标识：不渲染 ｜ AI辅助：「AI 辅助 ⓘ」+ 展开 19 字 ｜ AI生成：「AI 生成 ⓘ」+ 展开 17 字（<b>主标签同为 5 字符</b>）</td></tr>
+        <tr><td>渲染后 HTML 长度（一致版 / 冲突版）</td><td colspan="3" class="mono" style="font-size:11.5px">${htmlLen}</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:8px">以上数字全部由页面脚本实时计算。当前状态：<b>一致版与冲突版全文等长；正文中 p 值 0 次、统计术语 0 次、专家判断 0 次</b>。两版唯一差异是信息二的「结果方向」句（字数已配平）与折叠区的一个数值。本表可直接作为论文「材料配平」一节的数据来源。</p>`;
+}
+
+/* ============================================================
+   被试流程
+   ============================================================ */
+function renderProgress(){
+  const step = S.mode==="done" ? 5 : (S._step||1);
+  const names = ["阅读新闻","操作检验","核验机会","最终判断","完成"];
+  $("#flowProgress").innerHTML = names.map((n,i)=>{
+    const on = (i+1)<=step;
+    return `<span style="padding:4px 11px;border-radius:20px;border:1px solid ${on?'#1a6fb5':'#d4d4da'};
+      color:${on?'#fff':'#82828c'};background:${on?'#1a6fb5':'#fff'}">${i+1}. ${n}</span>`;
+  }).join('');
+}
+
+function showStep(n){
+  S._step = n;
+  ["step1","step2","step3","step4","stepDone"].forEach(id=> $("#"+id).style.display = "none");
+  $("#step"+n).style.display = "block";
+  renderProgress();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function startFlow(ai, cons){
+  S.mode = "flow";
+  S.cur = newParticipant(ai, cons);
+  S.cur._verifyOpen = {}; S.cur._verifyT0 = {}; S.cur._verifyDwell = {};
+  const vp = $("#vPanel"); if(vp) vp.style.display = "none";
+  S.ai = ai; S.cons = cons;
+  $$("#matrix .mx-btn").forEach(b=> b.classList.toggle("on", +b.dataset.ai===ai && +b.dataset.cons===cons));
+  const nm = condName(ai,cons);
+  $("#tCondName").textContent = nm;
+  $("#tCondCode").textContent = `AI_label=${ai} · evidence_consistency=${cons}`;
+  $("#p2CondName").textContent = nm;
+  $("#p2CondCode").textContent = `AI_label=${ai} · evidence_consistency=${cons}`;
+  $("#p1CondName").textContent = nm;
+  $("#p1AiText").textContent = aiDescText(ai);
+
+  buildMC();
+  buildVerifyMount();
+  buildFinal();
+  renderAll();
+  refreshQuizCond();
+  S.readStart = performance.now();
+  $("#readTimeNote").textContent = "";
+  const vc = $("#vCounter");
+  if(vc) vc.textContent = "已查看材料：0 个";
+  showStep(1);
+  toast("已分配新被试：" + nm);
+}
+
+/* --- MC 组件 --- */
+function buildMC(){
+  // MC1 两段式
+  $("#mc1").innerHTML = `
+    <div style="width:100%">
+      <div class="small" style="margin-bottom:6px">第一问：这则新闻上是否有任何与人工智能相关的标注？</div>
+      <div class="opts" id="mc1a">
+        <button class="opt" data-v="1">有</button>
+        <button class="opt" data-v="0">没有</button>
+        <button class="opt" data-v="9">记不清 / 没注意</button>
+      </div>
+      <div class="small" style="margin:10px 0 6px">第二问（若第一问选“有”）：标注的具体表述是哪一种？</div>
+      <div class="opts" id="mc1b">
+        <button class="opt" data-v="1">大意是「使用了 AI 辅助工具」</button>
+        <button class="opt" data-v="2">大意是「由 AI 系统生成」</button>
+        <button class="opt" data-v="8">有标注，但记不清具体表述</button>
+      </div>
+    </div>`;
+  ["mc1a","mc1b"].forEach(g=>{
+    $$("#"+g+" .opt").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        $$("#"+g+" .opt").forEach(x=>x.classList.remove("on"));
+        b.classList.add("on");
+      });
+    });
+  });
+
+  buildScale("mc2", 1, 7, v=>{ S.cur.consistency_manipulation_check = v; });
+  buildScale("mc3", 1, 7, v=>{ S.cur.resolvability_check = v; });
+
+  $("#mc4").innerHTML = ["有，明显错误","有一些可疑之处","没有，看不出错误","无法判断"]
+    .map(t=>`<button class="opt">${t}</button>`).join('');
+  $$("#mc4 .opt").forEach(b=> b.addEventListener("click", ()=>{
+    $$("#mc4 .opt").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    S.cur.false_info_check = b.textContent;
+    refreshJson();
+  }));
+}
+
+function buildScale(id, min, max, cb){
+  const el = $("#"+id); if(!el) return;
+  el.innerHTML = "";
+  for(let i=min;i<=max;i++){
+    const b = document.createElement("button");
+    b.textContent = i; b.dataset.v = i;
+    b.addEventListener("click", ()=>{
+      Array.from(el.children).forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); if(cb) cb(i);
+    });
+    el.appendChild(b);
+  }
+}
+
+/* --- 核验组件 --- */
+function buildVerifyMount(){
+  const m = $("#vMount");
+  /* 五项视觉权重完全相等（同边框、同内边距、同字号，无虚线、无默认高亮）；
+     「暂不查看」置于首位，不做成"次等选项" */
+  m.innerHTML = `
+    <div class="vbtn" data-k="none" style="margin-bottom:10px">
+      <div class="vt"><span class="dot"></span>暂不查看其他材料</div>
+      <div class="vd">直接进入最终判断。之后仍可返回查看材料。</div>
+    </div>` + VERIFY.map(v=>`
+    <div class="vbtn" data-k="${v.key}" style="margin-bottom:10px">
+      <div class="vt"><span class="dot"></span>${v.t}</div>
+      <div class="vd">${v.d}</div>
+    </div>`).join('');
+
+  $$("#vMount .vbtn").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const k = b.dataset.k;
+      if(k==="none"){ toast("已选择暂不查看"); return; }
+      openVerify(k, b);
+    });
+  });
+
+  // 核验内容容器
+  if(!$("#vPanel")){
+    const p = document.createElement("div");
+    p.id = "vPanel"; p.style.display = "none";
+    p.innerHTML = `
+      <div class="card" style="border-color:#9fbfd8;background:#fbfdff">
+        <div class="row" style="justify-content:space-between;margin-bottom:10px">
+          <div id="vPanelTitle" style="font-size:13.5px;font-weight:600"></div>
+          <button class="btn sec" id="vPanelClose" style="padding:6px 14px;font-size:12.5px">关闭并返回新闻</button>
+        </div>
+        <div id="vPanelBody" style="font-size:13px;line-height:1.85;color:#33353c"></div>
+      </div>`;
+    $("#vMount").parentNode.insertBefore(p, $("#vCounter"));
+    $("#vPanelClose").addEventListener("click", closeVerify);
+  }
+}
+
+function openVerify(key, btn){
+  const v = VERIFY.find(x=>x.key===key);
+  // 关闭其它已打开的面板（静默，不重置当前面板状态）
+  Object.keys(S.cur._verifyOpen).forEach(k=>{
+    if(S.cur._verifyOpen[k] && k!==key) closeVerify(k, true);
+  });
+  if(!S.cur._verifyOpen[key]){
+    S.cur._verifyOpen[key] = true;
+    S.cur.verification_type.push(v.t);
+    S.cur.verification_order.push(v.icon + " " + v.t);
+    S.cur.verification_count = S.cur.verification_type.length;
+  }
+  S.cur._verifyT0[key] = performance.now();
+  $("#vPanelTitle").textContent = v.t;
+  $("#vPanelBody").innerHTML = v.body;
+  $("#vPanel").style.display = "block";
+  $$("#vMount .vbtn").forEach(b=> b.classList.toggle("on", b.dataset.k===key));
+  $("#vCounter").textContent = `已查看材料：${S.cur.verification_count} 个 · 已打开：${S.cur.verification_type.join("、")||"—"}`;
+  refreshJson();
+}
+
+function closeVerify(key, silent){
+  const k = key || ($$("#vMount .vbtn.on")[0] ? $$("#vMount .vbtn.on")[0].dataset.k : null);
+  if(k && S.cur._verifyOpen[k] && S.cur._verifyT0[k]){
+    const dwell = Math.round((performance.now() - S.cur._verifyT0[k])/1000);
+    S.cur._verifyDwell[k] = (S.cur._verifyDwell[k]||0) + dwell;
+    S.cur._verifyT0[k] = null;
+    S.cur.verification_time = Object.keys(S.cur._verifyDwell)
+      .map(kk=>({type: (VERIFY.find(x=>x.key===kk)||{}).t, sec: S.cur._verifyDwell[kk]}));
+  }
+  if(!silent){
+    $("#vPanel").style.display = "none";
+    $$("#vMount .vbtn").forEach(b=> b.classList.remove("on"));
+    toast("已关闭，可回到新闻继续判断");
+    const s3 = $("#step3");
+    window.scrollTo({top: s3.offsetTop - 100, behavior:"smooth"});
+  }
+  refreshJson();
+}
+
+/* --- 最终判断 --- */
+function buildFinal(){
+  buildScale("f1",1,7, v=>{ S.cur.credibility = v; refreshJson(); });
+  buildScale("f2",1,7, v=>{ S.cur.need_verification = v; refreshJson(); });
+  buildScale("f3",1,7, v=>{ S.cur.final_judgment = v; refreshJson(); });
+  buildScale("f4",1,7, v=>{ S.cur.judgment_confidence = v; refreshJson(); });
+}
+
+/* --- 事件绑定 --- */
+function bindFlow(){
+  $("#btnReadDone").addEventListener("click", ()=>{
+    S.cur.reading_time_sec = Math.round((performance.now() - S.readStart)/1000);
+    $("#readTimeNote").textContent = `本次阅读时长：${S.cur.reading_time_sec} 秒（已记录 reading_time_sec）`;
+    refreshJson();
+    showStep(2);
+  });
+
+  $("#btnToStep3").addEventListener("click", ()=>{
+    // MC1 两段式合并
+    const a = $$("#mc1a .opt.on")[0], b = $$("#mc1b .opt.on")[0];
+    S.cur.ai_manipulation_check = a ? (a.dataset.v==="1" ? (b ? +b.dataset.v : 8) : +a.dataset.v) : null;
+    refreshJson();
+    showStep(3);
+  });
+
+  $("#btnToStep4").addEventListener("click", ()=>{
+    refreshJson();
+    showStep(4);
+  });
+
+  $("#btnFinish").addEventListener("click", ()=>{
+    if(S.cur.credibility===null || S.cur.need_verification===null || S.cur.final_judgment===null){
+      toast("请先完成 Q1–Q3 三项判断");
+      return;
+    }
+    S.cur.verification = S.cur.verification_count > 0 ? 1 : 0;
+    const rec = JSON.parse(JSON.stringify(S.cur));
+    delete rec._verifyOpen; delete rec._verifyT0;
+    S.all.push(rec);
+    S.mode = "done";
+    $("#doneSummary").textContent = JSON.stringify(rec, null, 2);
+    showStep("Done");
+    refreshTable();
+    refreshJson();
+    toast("作答已保存，累计 " + S.all.length + " 名被试");
+  });
+
+  $("#btnRandomAssign").addEventListener("click", ()=>{
+    const ai = Math.floor(Math.random()*3), c = Math.floor(Math.random()*2);
+    startFlow(ai, c);
+    switchTab("p2");
+  });
+  $("#btnRestartFlow").addEventListener("click", ()=>{
+    const ai = Math.floor(Math.random()*3), c = Math.floor(Math.random()*2);
+    startFlow(ai, c);
+  });
+  $("#btnAgain").addEventListener("click", ()=>{
+    const ai = Math.floor(Math.random()*3), c = Math.floor(Math.random()*2);
+    startFlow(ai, c);
+  });
+  $("#btnGoData").addEventListener("click", ()=> switchTab("p3"));
+}
+
+/* ============================================================
+   数据面板
+   ============================================================ */
+function refreshJson(){
+  if(!S.cur){ $("#jsonOut").textContent = "（尚未开始。请到「② 被试完整流程」随机分配一个被试。）"; return; }
+  const rec = JSON.parse(JSON.stringify(S.cur));
+  delete rec._verifyOpen; delete rec._verifyT0;
+  $("#jsonOut").textContent = JSON.stringify(rec, null, 2);
+}
+
+function refreshTable(){
+  if(!S.all.length){ $("#tableOut").innerHTML = "（暂无记录）"; return; }
+  const cols = ["participant_id","AI_label","evidence_consistency","ai_manipulation_check",
+                "consistency_manipulation_check","resolvability_check","false_info_check",
+                "credibility","verification","verification_count","final_judgment",
+                "need_verification","judgment_confidence","reading_time_sec"];
+  const head = cols.map(c=>`<th>${c}</th>`).join('');
+  const rows = S.all.map(r=> `<tr>${cols.map(c=>{
+    let v = r[c];
+    if(c==="false_info_check" && v) v = v.slice(0,2);
+    if(Array.isArray(v)) v = v.join(" / ");
+    return `<td>${v===null||v===undefined?"—":v}</td>`;
+  }).join('')}</tr>`).join('');
+  $("#tableOut").innerHTML = `<table class="t"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function download(name, content, type){
+  const blob = new Blob([content], {type: type||"application/json;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+}
+
+/* ============================================================
+   标签页
+   ============================================================ */
+function switchTab(pid){
+  $$(".tab").forEach(t=> t.classList.toggle("on", t.dataset.p===pid));
+  $$(".pane").forEach(p=> p.classList.toggle("on", p.id===pid));
+  if(pid==="p5") updateLenCheck();
+  if(pid==="p6") refreshQuizCond();
+  if(pid==="p7") renderPilotTable();
+}
+function bindTabs(){
+  $$(".tab").forEach(t=> t.addEventListener("click", ()=> switchTab(t.dataset.p)));
+}
+
+/* ============================================================
+   ⑥ 材料理解自检
+   ans 里的键 = evidence_consistency；-1 表示探索性题、不计分
+   ============================================================ */
+const QUIZ = [
+  {
+    id:"Q1",
+    q:"这项研究里，使用护眼模式的学生，是否报告自己感觉眼睛没有以前那么容易疲劳？",
+    opts:["是，学生的自我感受确有改善","否，学生的自我感受没有变化","文中没有提到学生的自我感受"],
+    ans:{0:0, 1:0}, why:"信息一直接写了「使用护眼模式的学生普遍表示，眼睛没有以前那么容易疲劳」——两版都一样。"
+  },
+  {
+    id:"Q2",
+    q:"研究人员用仪器测的那一项指标，是否出现了和第一项结果同样明显的变化？",
+    opts:["是，这项指标也出现了比较明显的变化","不是，这项指标只有很小的变化","文中没有提到这一项指标"],
+    ans:{0:0, 1:1}, why:"一致版写「也出现了比较明显的改善」；冲突版写「只有很小的变化，与普通设置组差别不大」。"
+  },
+  {
+    id:"Q3",
+    q:"这篇报道中提到的几项结果，彼此之间是否完全一致？",
+    opts:["比较明确地一致","比较明确地不一致","不好判断"],
+    ans:{0:0, 1:1}, why:"一致版写「两项结果的变化方向基本一致」；冲突版写「并没有呈现同样明显的变化」。"
+  },
+  {
+    id:"Q4",
+    q:"（探索性，无标准答案）你觉得这则报道更像一则正常的研究报道，还是更像一则明显有问题的报道？",
+    opts:["像正常的研究报道","像明显有问题的报道","说不好"],
+    ans:{0:-1, 1:-1}, why:"期望两版都主要选「像正常的研究报道」。<b>若冲突版大量选「明显有问题」，说明冲突已滑向真假判断，材料必须再弱化。</b>"
+  }
+];
+
+function buildQuiz(){
+  $("#qMount").innerHTML = QUIZ.map((it,i)=>`
+    <div class="mc-item">
+      <div class="qq"><span class="num">${it.id}.</span>${it.q}</div>
+      <div class="opts" data-q="${i}">${it.opts.map((o,j)=>`<button class="opt" data-j="${j}">${o}</button>`).join('')}</div>
+    </div>`).join('');
+  $$("#qMount .opts").forEach(g=>{
+    g.addEventListener("click", e=>{
+      const b = e.target.closest(".opt"); if(!b) return;
+      Array.from(g.children).forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+    });
+  });
+  $("#btnQuizSubmit").addEventListener("click", submitQuiz);
+  $("#btnQuizClear").addEventListener("click", ()=>{ S.quiz=[]; $("#qResult").innerHTML=""; refreshQuizTable(); toast("已清空自检记录"); });
+  refreshQuizCond();
+  refreshQuizTable();
+}
+
+function refreshQuizCond(){
+  const nm = condName(S.ai, S.cons);
+  const a = $("#qCondName"), b = $("#qCondCode");
+  if(a) a.textContent = nm;
+  if(b) b.textContent = `AI_label=${S.ai} · evidence_consistency=${S.cons}`;
+}
+
+function submitQuiz(){
+  const ans = QUIZ.map((it,i)=>{
+    const el = document.querySelector(`#qMount .opts[data-q="${i}"] .opt.on`);
+    return el ? +el.dataset.j : null;
+  });
+  if(ans.some(a=>a===null)){ toast("请先答完全部 4 题"); return; }
+  const ai = S.ai, cons = S.cons;
+  const correct = QUIZ.map((it,i)=> it.ans[cons]===-1 ? null : (ans[i]===it.ans[cons]));
+  S.quiz.push({ai, cons, ans, correct});
+  const sc = correct.filter(c=>c!==null);
+  const ok = sc.filter(Boolean).length;
+  $("#qResult").innerHTML = `
+    <div class="note ${ok===sc.length?'ok-n':'warn-n'}">
+      <b>本次自检：${ok} / ${sc.length} 题正确</b>　条件：${condName(ai,cons)}（AI_label=${ai} · evidence_consistency=${cons}）
+      ${QUIZ.map((it,i)=>{
+        const c = correct[i];
+        const mk = c===null ? '<span class="tag info">不计分</span>' : (c?'<span class="tag ok">正确</span>':'<span class="tag bad">错误</span>');
+        const std = it.ans[cons]===-1 ? "（探索性题，无标准答案）" : `「${it.opts[it.ans[cons]]}」`;
+        return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.08)">
+          <b>${it.id}</b> ${mk} 你的选择：「${it.opts[ans[i]]}」　标准答案：<b>${std}</b>
+          <div class="small" style="margin-top:3px">${it.why}</div></div>`;
+      }).join('')}
+    </div>`;
+  refreshQuizTable();
+}
+
+function refreshQuizTable(){
+  if(!S.quiz.length){ $("#qTable").innerHTML = "（暂无记录）"; return; }
+  const cell = {};
+  S.quiz.forEach(r=>{
+    const k = r.ai + "-" + r.cons;
+    cell[k] = cell[k] || { n:0, ok:[0,0,0], cnt:[0,0,0], q4:[0,0,0] };
+    const c = cell[k]; c.n++;
+    r.correct.forEach((x,i)=>{ if(x!==null){ c.cnt[i]++; if(x) c.ok[i]++; } });
+    c.q4[r.ans[3]]++;
+  });
+  const pc = (a,b)=> b ? Math.round(a/b*100) + "%" : "—";
+  let rows = "";
+  [0,1,2].forEach(ai=> [0,1].forEach(cons=>{
+    const c = cell[ai+"-"+cons];
+    if(!c) return;
+    const q23 = (c.ok[1]+c.ok[2]) / (c.cnt[1]+c.cnt[2]);
+    const verdict = q23>=0.8 ? '<span class="tag ok">合适</span>'
+                  : q23>=0.6 ? '<span class="tag warn">偏难</span>'
+                  : '<span class="tag bad">门槛过高</span>';
+    rows += `<tr>
+      <td>${condName(ai,cons)}</td><td>${c.n}</td>
+      <td>${pc(c.ok[0],c.cnt[0])}</td>
+      <td>${pc(c.ok[1],c.cnt[1])}</td>
+      <td>${pc(c.ok[2],c.cnt[2])}</td>
+      <td><b>${pc(c.ok[1]+c.ok[2], c.cnt[1]+c.cnt[2])}</b> ${verdict}</td>
+      <td class="small">正常 ${c.q4[0]} ／ 有问题 ${c.q4[1]} ／ 说不好 ${c.q4[2]}</td>
+    </tr>`;
+  }));
+  $("#qTable").innerHTML = `
+    <table class="t">
+      <thead><tr><th>条件</th><th>n</th><th>Q1 自我感受</th><th>Q2 第二项指标</th><th>Q3 结果是否一致</th><th>Q2+Q3 合计</th><th>Q4（探索性）</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p style="margin-top:8px">判读：<b>Q2+Q3 合计</b>是一致/冲突是否被普通读者读懂的核心指标。理想区间是 <b>80%–95%</b>——太低说明理解门槛过高，太高（尤其接近 100%）说明操纵过于明显。<b>Q4</b> 用于监控冲突是否被读成"假消息"。</p>`;
+}
+
+/* ============================================================
+   初始化
+   ============================================================ */
+function init(){
+  buildMatrix();
+  bindTabs();
+  bindFlow();
+  buildQuiz();
+  setCond(0,0,false);
+  refreshTable();
+  refreshJson();
+  renderProgress();
+
+  /* AI 披露标签：点击 chip / ⓘ 展开或收起完整说明（事件委托，跨重绘有效） */
+  document.addEventListener("click", (e)=>{
+    const chip = e.target.closest(".ai-chip");
+    if(!chip) return;
+    S.aiOpen = !S.aiOpen;
+    renderAll();
+    if(S.pilot) $("#pilotNews").innerHTML = renderNews(S.pilot.AI_label, S.pilot.evidence_consistency, {highlight:false, sum:false});
+  });
+
+  $("#btnRand").addEventListener("click", ()=>{
+    const ai = Math.floor(Math.random()*3), c = Math.floor(Math.random()*2);
+    setCond(ai, c, false); toast("随机条件：" + condName(ai,c));
+  });
+  $("#btnHighlight").addEventListener("click", ()=>{
+    S.highlight = !S.highlight; renderAll();
+  });
+  $("#btnSum").addEventListener("click", ()=>{
+    S.sum = !S.sum; renderAll();
+    toast(S.sum ? "已开证据速览行（注意：它会明显提高冲突的可见度）" : "已关闭证据速览行");
+  });
+  $("#btnResetAll").addEventListener("click", ()=>{
+    if(!confirm("确认清空所有已记录被试数据？")) return;
+    S.all = []; S.cur = null; S.mode = "browse";
+    $("#step1").style.display="block";
+    ["step2","step3","step4","stepDone"].forEach(id=>$("#"+id).style.display="none");
+    refreshTable(); refreshJson(); toast("已清空");
+  });
+  $("#btnCopyJson").addEventListener("click", ()=>{
+    const t = $("#jsonOut").textContent;
+    navigator.clipboard.writeText(t).then(()=>toast("已复制到剪贴板")).catch(()=>toast("复制失败，请手动选择"));
+  });
+  $("#btnDownloadJson").addEventListener("click", ()=>{
+    download("experiment_demo_data.json", JSON.stringify(S.all.length?S.all:[S.cur].filter(Boolean), null, 2));
+    toast("已下载 JSON");
+  });
+  $("#btnDownloadCsv").addEventListener("click", ()=>{
+    const recs = S.all.length ? S.all : [S.cur].filter(Boolean);
+    if(!recs.length){ toast("暂无数据"); return; }
+    const cols = ["participant_id","AI_label","evidence_consistency","ai_manipulation_check",
+                  "consistency_manipulation_check","resolvability_check","false_info_check",
+                  "credibility","verification","verification_count","verification_type",
+                  "verification_time","final_judgment","need_verification",
+                  "judgment_confidence","reading_time_sec"];
+    const esc = v => {
+      if(v===null||v===undefined) return "";
+      let s = Array.isArray(v) ? JSON.stringify(v) : String(v);
+      return '"' + s.replace(/"/g,'""') + '"';
+    };
+    const csv = "\uFEFF" + cols.join(",") + "\n" + recs.map(r=> cols.map(c=>esc(r[c])).join(",")).join("\n");
+    download("experiment_demo_data.csv", csv, "text/csv;charset=utf-8");
+    toast("已下载 CSV（含 BOM，Excel 可直接打开）");
+  });
+}
+/* ============================================================
+   预测试模式（参与者视图）
+   —— 随机分配条件但对参与者隐藏；记录本机；不显示对错/条件
+   ============================================================ */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function startPilot(){
+  const ai = Math.floor(Math.random()*3), c = Math.floor(Math.random()*2);
+  S.pilot = {
+    participant_id: "P" + String(pidSeq++).padStart(3,"0") + "-" + Math.random().toString(36).slice(2,6).toUpperCase(),
+    AI_label: ai, evidence_consistency: c,
+    q1:null, q2_consistency:null, q3_resolvability:null, q4_false_info:null,
+    open_feedback:"", completion_time_sec:null
+  };
+  S.pilotStart = performance.now();
+  S.aiOpen = false;
+  $("#pilotNews").innerHTML = renderNews(ai, c, {highlight:false, sum:false});
+  $("#pilotIntro").style.display = "none";
+  $("#pilotRead").style.display = "block";
+  $("#pilotQs").style.display = "none";
+  $("#pilotDone").style.display = "none";
+  $$("#pq1 .opt, #pq4 .opt").forEach(x=> x.classList.remove("on"));
+  ["pq2","pq3"].forEach(id=>{ const el=$("#"+id); if(el) el.innerHTML=""; });
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function buildPilotScales(){
+  buildScale("pq2", 1, 7, v=>{ if(S.pilot) S.pilot.q2_consistency = v; });
+  buildScale("pq3", 1, 7, v=>{ if(S.pilot) S.pilot.q3_resolvability = v; });
+}
+
+function submitPilot(){
+  if(!S.pilot){ toast("请先开始阅读"); return; }
+  if(S.pilot.q1===null || S.pilot.q2_consistency===null || S.pilot.q3_resolvability===null || S.pilot.q4_false_info===null){
+    toast("请先答完 Q1–Q4 四个问题"); return;
+  }
+  S.pilot.open_feedback = ($("#pqOpen").value||"").trim();
+  S.pilot.completion_time_sec = Math.round((performance.now()-S.pilotStart)/1000);
+  S.pilotAll.push(JSON.parse(JSON.stringify(S.pilot)));
+  try{ localStorage.setItem("pilot_data", JSON.stringify(S.pilotAll)); }catch(e){}
+  $("#pilotQs").style.display = "none";
+  $("#pilotDone").style.display = "block";
+  window.scrollTo({top:0, behavior:"smooth"});
+  toast("作答已保存，感谢参与");
+}
+
+function renderPilotTable(){
+  if(!S.pilotAll.length){ $("#pilotTable").innerHTML = "（暂无记录）"; return; }
+  const cols = ["participant_id","AI_label","evidence_consistency","q1","q2_consistency","q3_resolvability","q4_false_info","open_feedback","completion_time_sec"];
+  const head = cols.map(c=>`<th>${c}</th>`).join('');
+  const rows = S.pilotAll.map(r=> `<tr>${cols.map(c=>{
+    let v = r[c];
+    if(c==="open_feedback") v = v ? escapeHtml(String(v).slice(0,300)) : "—";
+    else v = (v===null||v==="") ? "—" : v;
+    return `<td>${v}</td>`;
+  }).join('')}</tr>`).join('');
+  $("#pilotTable").innerHTML = `<table class="t"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function downloadPilotCsv(){
+  if(!S.pilotAll.length){ toast("暂无预测试数据"); return; }
+  const cols = ["participant_id","AI_label","evidence_consistency","q1","q2_consistency","q3_resolvability","q4_false_info","open_feedback","completion_time_sec"];
+  const esc = v => { if(v===null||v===undefined||v==="") return ""; return '"' + String(v).replace(/"/g,'""') + '"'; };
+  const csv = "﻿" + cols.join(",") + "\n" + S.pilotAll.map(r=> cols.map(c=>esc(r[c])).join(",")).join("\n");
+  download("pilot_answers.csv", csv, "text/csv;charset=utf-8");
+  toast("已下载预测试 CSV");
+}
+
+function toggleResearcher(){
+  const rm = document.getElementById("researcherMode");
+  const pm = document.getElementById("pilotMode");
+  const show = rm.hasAttribute("hidden");
+  if(show){
+    rm.removeAttribute("hidden");
+    pm.style.display = "none";
+    document.querySelector(".researcher-back").style.display = "block";
+    window.scrollTo(0,0);
+  }else{
+    rm.setAttribute("hidden","");
+    pm.style.display = "block";
+    document.querySelector(".researcher-back").style.display = "none";
+    window.scrollTo(0,0);
+  }
+}
+
+function initPilot(){
+  try{ const d = JSON.parse(localStorage.getItem("pilot_data")||"[]"); if(Array.isArray(d)) S.pilotAll = d; }catch(e){}
+
+  $("#btnPilotStart").addEventListener("click", startPilot);
+  $("#btnPilotReadDone").addEventListener("click", ()=>{
+    $("#pilotRead").style.display = "none";
+    $("#pilotQs").style.display = "block";
+    buildPilotScales();
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+  $$("#pq1 .opt").forEach(b=> b.addEventListener("click", ()=>{
+    $$("#pq1 .opt").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    if(S.pilot) S.pilot.q1 = b.dataset.v;
+  }));
+  $$("#pq4 .opt").forEach(b=> b.addEventListener("click", ()=>{
+    $$("#pq4 .opt").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+    if(S.pilot) S.pilot.q4_false_info = b.dataset.v;
+  }));
+  $("#btnPilotSubmit").addEventListener("click", submitPilot);
+  $("#btnPilotCopy").addEventListener("click", ()=>{
+    if(!S.pilot){ toast("请先完成作答"); return; }
+    navigator.clipboard.writeText(JSON.stringify(S.pilot,null,2))
+      .then(()=>toast("已复制，可发给研究者")).catch(()=>toast("复制失败，请改用下载"));
+  });
+  $("#btnPilotDownload").addEventListener("click", ()=>{
+    if(!S.pilot){ toast("请先完成作答"); return; }
+    download("pilot_answer.json", JSON.stringify(S.pilot,null,2));
+    toast("已下载我的回答");
+  });
+  $("#btnPilotAgain").addEventListener("click", ()=>{
+    $("#pilotDone").style.display = "none";
+    $("#pilotIntro").style.display = "block";
+    S.pilot = null;
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  $("#btnPilotCsv").addEventListener("click", downloadPilotCsv);
+  $("#btnPilotJsonAll").addEventListener("click", ()=>{
+    if(!S.pilotAll.length){ toast("暂无预测试数据"); return; }
+    download("pilot_answers.json", JSON.stringify(S.pilotAll,null,2));
+    toast("已下载预测试 JSON");
+  });
+  $("#btnPilotClear").addEventListener("click", ()=>{
+    if(!confirm("确认清空本机全部预测试记录？此操作不可恢复。")) return;
+    S.pilotAll = []; try{ localStorage.removeItem("pilot_data"); }catch(e){}
+    renderPilotTable(); toast("已清空预测试记录");
+  });
+
+  $("#researcherEntry").addEventListener("click", toggleResearcher);
+  $("#researcherBack").addEventListener("click", toggleResearcher);
+}
+
+document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", initPilot);
+</script>
+</body>
+</html>
