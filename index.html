@@ -76,16 +76,10 @@ input,select{font-family:inherit;font-size:inherit}
 .ns-title{font-size:25px;line-height:1.38;font-weight:700;letter-spacing:-.3px;margin-bottom:14px;color:#16161a}
 .ns-meta{display:flex;gap:14px;font-size:12.5px;color:var(--ink3);padding-bottom:14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .ns-meta .src{color:#42444c;font-weight:500}
-/* ---- AI 披露标签：简短 chip + ⓘ 展开（三条件视觉规格一致） ---- */
+/* ---- AI 披露标签：文本开头标识（三条件视觉规格一致，无 ⓘ、无展开说明） ---- */
 .ai-wrap{padding:12px 0 0}
-.ai-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#5f6570;background:#f2f3f5;
-  border-radius:5px;padding:4px 10px;letter-spacing:.2px;line-height:1.5;cursor:pointer;user-select:none;transition:.14s}
-.ai-chip:hover{background:#e8eaee}
-.ai-chip .ii{font-style:normal;font-size:10px;font-weight:600;color:#8b909a;border:1px solid #c2c6cd;
-  border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;line-height:1}
-.ai-note{display:none;margin-top:8px;font-size:12.5px;color:#6b7280;background:#fafbfc;border:1px solid #e8eaed;
-  border-radius:7px;padding:9px 12px;line-height:1.7;max-width:520px}
-.ai-note.on{display:block}
+.ai-label{display:inline-block;font-size:13px;font-weight:500;color:#5f6570;background:#f2f3f5;
+  border-radius:5px;padding:5px 11px;letter-spacing:.3px;line-height:1.5}
 
 /* ---- 证据速览行（默认关闭，开发者可开） ---- */
 .ev-sum{font-size:12.5px;color:#54595f;background:#eef0f2;border-radius:6px;padding:7px 11px;margin-bottom:9px;letter-spacing:.2px}
@@ -150,6 +144,23 @@ input,select{font-family:inherit;font-size:inherit}
 .vbtn .vt .dot{width:7px;height:7px;border-radius:50%;background:var(--line2);flex:0 0 auto}
 .vbtn.on .vt .dot{background:var(--accent)}
 .step{font-size:11.5px;font-weight:600;color:var(--accent);letter-spacing:.6px;margin-bottom:6px}
+
+/* ============ 核验材料模态弹窗（覆盖新闻，关闭后返回新闻且保留滚动位置） ============ */
+.exp-modal-backdrop{position:fixed;inset:0;background:rgba(22,24,28,.5);display:none;z-index:400;
+  padding:24px 16px;overflow:auto;align-items:flex-start;justify-content:center}
+.exp-modal-backdrop.on{display:flex}
+.exp-modal{background:#fff;border-radius:12px;max-width:680px;width:100%;max-height:86vh;overflow:auto;
+  box-shadow:0 14px 44px rgba(0,0,0,.28)}
+.exp-modal-head{position:sticky;top:0;background:#fff;display:flex;justify-content:space-between;align-items:center;
+  gap:12px;padding:13px 16px;border-bottom:1px solid var(--line);z-index:1}
+.exp-modal-body{padding:16px 18px;font-size:13px;line-height:1.85;color:#33353c}
+.exp-news-verify{margin:14px 0 4px;max-width:760px}
+.exp-news-verify .ns-meta{margin-top:6px}
+@media(max-width:720px){
+  .exp-modal-backdrop{padding:0}
+  .exp-modal{max-width:100%;max-height:100vh;height:100vh;border-radius:0}
+  .exp-modal-head{position:sticky}
+}
 .hr{height:1px;background:var(--line);margin:24px 0}
 table.t{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
 table.t th,table.t td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;line-height:1.65}
@@ -210,86 +221,111 @@ details .dc{margin-top:12px;font-size:13px;line-height:1.8;color:#3a3c44}
 <div id="pilotMode">
   <div class="pilot-wrap">
 
-    <!-- 第 0 步：介绍 -->
-    <div id="pilotIntro" class="card">
-      <h2>关于网络新闻阅读的小调查</h2>
-      <p class="sub" style="margin-bottom:14px">约 3–5 分钟 · 无需专业知识 · 没有标准答案</p>
-      <p class="pilot-p">我们想请你阅读一则网络新闻，然后回答几个关于这则新闻的问题。请像平时刷手机看新闻一样自然阅读，凭第一感觉回答即可。</p>
+    <!-- 步骤 0：知情同意 + 介绍 -->
+    <div id="expConsent" class="card">
+      <h2>关于网络新闻阅读的实验研究</h2>
+      <p class="sub" style="margin-bottom:14px">约 5–8 分钟 · 无需专业知识 · 匿名参与</p>
+      <p class="pilot-p">您好，我们是从事传播与信息行为研究的团队。我们邀请您阅读一则网络新闻，并观察您自然的阅读与判断过程。本研究遵循以下原则：</p>
       <ul class="dot" style="margin:12px 0 4px">
-        <li>本次调查<b>不会收集</b>你的姓名、手机号、邮箱、学校等任何个人信息。</li>
-        <li>作答过程中可以随时返回重新阅读新闻。</li>
-        <li>问题没有对错之分，你的真实感受最有价值。</li>
+        <li><b>自愿参与</b>：您可以随时关闭页面退出，不会受到任何影响。</li>
+        <li><b>匿名</b>：我们<b>不会收集</b>您的姓名、手机号、邮箱、学校、IP 等任何个人身份信息。系统只会为您生成一串随机研究编号（如 EXP-AB12CD34），用于把您的作答与后续问卷匹配。</li>
+        <li><b>数据用途</b>：数据仅用于学术研究，不会用于商业或内容推送。</li>
+        <li><b>实验说明</b>：新闻内容包含一项刻意设计的"信息是否相互一致"安排，这是实验操纵的一部分；您无需担心，按真实感受作答即可。</li>
       </ul>
+      <label class="card s2" style="display:flex;gap:10px;align-items:flex-start;margin-top:16px;cursor:pointer">
+        <input type="checkbox" id="expConsentCb" style="margin-top:4px;width:18px;height:18px">
+        <span>我已阅读并理解上述说明，<b>自愿参与</b>本实验，并同意在匿名条件下记录我的阅读与作答过程。</span>
+      </label>
       <div class="row" style="justify-content:center;margin-top:20px">
-        <button class="btn" id="btnPilotStart">开始阅读</button>
+        <button class="btn" id="btnExpStart" disabled>开始实验</button>
+      </div>
+      <p class="small" style="text-align:center;margin-top:10px;color:var(--warn)" id="expConsentNote">请先勾选同意后再开始。</p>
+    </div>
+
+    <!-- 步骤 1：阅读 -->
+    <div id="expRead" style="display:none">
+      <div class="note">【阅读任务】请像平时浏览新闻一样，阅读下面这则报道。阅读完毕后点击底部按钮继续。阅读过程中可随时回看。</div>
+      <div id="expNews"></div>
+      <div class="row" style="justify-content:center;margin-top:20px">
+        <button class="btn" id="btnExpReadDone">我已阅读完毕，继续</button>
       </div>
     </div>
 
-    <!-- 第 1 步：阅读 -->
-    <div id="pilotRead" style="display:none">
-      <div class="note"><b>【阅读任务】</b>请像平时浏览新闻一样，阅读下面这则报道。阅读完毕后点击页面底部的按钮进入问题。你可以在阅读过程中随时回看。</div>
-      <div id="pilotNews"></div>
-      <div class="row" style="justify-content:center;margin-top:20px">
-        <button class="btn" id="btnPilotReadDone">我已阅读完毕，进入问题</button>
+    <!-- 步骤 2：核查任务 -->
+    <div id="expVerify" style="display:none">
+      <div class="step">相关材料</div>
+      <h2 style="font-size:17px;margin-bottom:6px">如果你希望进一步了解这项研究，可以查看以下相关材料</h2>
+      <div class="note warn-n">
+        以下材料都可以点开查看，也可以直接进入下一步。材料可随时关闭，关闭后回到新闻继续阅读。
+        <br><br><b>说明</b>：这些材料在六个实验条件中<b>完全相同</b>（不随您看到的新闻版本变化），五个选项视觉权重相同。
+      </div>
+
+      <!-- 新闻正文（核查阶段可继续回看，关闭材料后回到此处） -->
+      <div class="exp-news-verify">
+        <div class="small" style="margin:4px 0 8px;color:var(--ink3)">— 新闻正文（可回看，便于对照下方材料）—</div>
+        <div id="expNewsVerify"></div>
+      </div>
+
+      <div class="step" style="margin-top:18px">补充材料</div>
+      <div id="expVMount"></div>
+      <div id="expVCounter" class="small" style="margin-top:12px;color:var(--ink3)">已查看材料：0 个</div>
+      <div class="row" style="justify-content:flex-end;margin-top:14px">
+        <button class="btn sec" id="btnExpVerifyDone">进入下一步</button>
       </div>
     </div>
 
-    <!-- 第 2 步：问题 -->
-    <div id="pilotQs" style="display:none">
-      <div class="note">下面几个问题关于你刚才读到的这则报道。按你的理解回答即可，没有标准答案。</div>
-
-      <div class="mc-item">
-        <div class="qq"><span class="num">Q1.</span>这项研究中，使用护眼模式的学生是否报告自己感觉眼睛更舒服？</div>
-        <div class="opts" id="pq1">
-          <button class="opt" data-v="yes">是，报告说更舒服了</button>
-          <button class="opt" data-v="no">否，没有变化</button>
-          <button class="opt" data-v="na">文中没有提到这一点</button>
-        </div>
-      </div>
-
-      <div class="mc-item">
-        <div class="qq"><span class="num">Q2.</span>这篇报道中，不同观察结果呈现出的变化是否一致？</div>
-        <div class="scale" id="pq2"></div>
-        <div class="scale-cap"><span>1 = 完全不一致，互相矛盾</span><span>7 = 完全一致，互相支持</span></div>
-      </div>
-
-      <div class="mc-item">
-        <div class="qq"><span class="num">Q3.</span>如果你希望进一步了解这项研究，你认为目前这些信息能否通过查阅其他资料得到更明确的判断？</div>
-        <div class="scale" id="pq3"></div>
-        <div class="scale-cap"><span>1 = 完全不能</span><span>7 = 完全可以</span></div>
-      </div>
-
-      <div class="mc-item">
-        <div class="qq"><span class="num">Q4.</span>你认为这篇报道中是否存在明显错误的信息？</div>
-        <div class="opts" id="pq4">
-          <button class="opt" data-v="yes">有，明显错误</button>
-          <button class="opt" data-v="suspect">有一些可疑之处</button>
-          <button class="opt" data-v="no">没有，看不出错误</button>
-          <button class="opt" data-v="unknown">无法判断</button>
-        </div>
-      </div>
-
-      <div class="mc-item" style="background:var(--bg2)">
-        <div class="qq"><span class="num">开放题.</span>你刚才阅读这篇报道时，有没有哪个地方让你觉得难以理解？如果有，请简单说明。</div>
-        <textarea id="pqOpen" rows="4" placeholder="例如：某句话读不懂、某个数据不知道什么意思、整体不知道在讲什么……（可留空）"></textarea>
-      </div>
-
+    <!-- 步骤 3：进入正式问卷前说明（实验网页不再采集正式问卷题项，统一由问卷星接管） -->
+    <div id="expQuestions" style="display:none">
+      <div class="note ok-n"><b>新闻阅读与材料核查已完成。</b></div>
+      <p class="pilot-p">接下来您需要填写一份简短的正式问卷（约 3 分钟），用于测量您对这则新闻的看法、判断与态度等。正式问卷独立于本实验网页，由问卷星托管。</p>
+      <p class="pilot-p">请在进入问卷前记下您的<b>研究编号</b>（稍后也会显示），并在问卷第一题「研究编号」中填写，便于我们将本实验的核验记录与您的问卷作答对应起来。</p>
       <div class="row" style="justify-content:center;margin-top:18px">
-        <button class="btn" id="btnPilotSubmit">提交作答</button>
+        <button class="btn" id="btnExpSubmit">继续填写正式问卷</button>
       </div>
     </div>
 
-    <!-- 第 3 步：完成 -->
-    <div id="pilotDone" style="display:none">
-      <div class="note ok-n">
-        <b>感谢你的参与！</b>你的回答已记录在本机浏览器中。
+    <!-- 步骤 4：完成 + 问卷星衔接 -->
+    <div id="expDone" style="display:none">
+      <div class="note ok-n"><b>实验部分已完成，感谢您的参与！</b></div>
+      <p class="pilot-p">接下来需要您填写一份简短的正式问卷（约 3 分钟），测量您对这则新闻的看法等。请在进入前记下您的研究编号：</p>
+      <div class="card s2" style="text-align:center">
+        <div class="small">您的研究编号（请记下或复制）</div>
+        <div id="expPidBig" style="font-family:ui-monospace,Menlo,monospace;font-size:22px;font-weight:700;letter-spacing:1px;margin:6px 0;color:#155a94">—</div>
+        <button class="btn sec" id="btnExpCopyPid">复制编号</button>
       </div>
-      <p class="pilot-p">研究者会收集这些作答，用来判断这则新闻材料是否容易被普通人理解。本页<b>不会显示</b>你被分配到的是哪一种材料版本，也<b>不会记录</b>任何个人信息。</p>
-      <p class="pilot-p">如果你愿意，可以把下面「我的回答」发给研究者（内含你被分配到的材料版本标记，方便他们按条件汇总，但仍不含任何个人信息）。</p>
-      <div class="row" style="margin-top:14px">
-        <button class="btn sec" id="btnPilotCopy">复制我的回答</button>
-        <button class="btn sec" id="btnPilotDownload">下载我的回答（JSON）</button>
-        <button class="btn sec" id="btnPilotAgain">再填一份（新随机材料）</button>
+      <p class="pilot-p" id="expSurveyHint"></p>
+      <div class="row" style="justify-content:center;margin-top:8px">
+        <a class="btn" id="btnExpSurvey" href="#" target="_blank" rel="noopener">前往填写正式问卷（问卷星）</a>
+      </div>
+      <p class="small" style="text-align:center;margin-top:10px" id="expServerNote"></p>
+      <div class="row" style="justify-content:center;display:none" id="btnExpRetrySyncRow">
+        <button class="btn sec" id="btnExpRetrySync">重试同步到服务器</button>
+      </div>
+      <hr class="hr">
+      <p class="pilot-p">请下载下方 <b>Excel（.xlsx）</b> 文件，并上传到正式问卷中的「实验记录文件」上传题（必答）。该文件含三个工作表：<br>
+      <b>participant_summary</b>（您的汇总数据）、<b>event_log</b>（您的查看行为事件日志）、<b>raw_json</b>（完整原始记录备份）。</p>
+      <div class="row" style="justify-content:center">
+        <button class="btn" id="btnExpDownload">下载我的实验记录（XLSX）</button>
+        <button class="btn sec" id="btnExpDownloadJson">下载原始 JSON（备用）</button>
+        <button class="btn sec" id="btnExpCopy">复制我的实验记录（JSON）</button>
+      </div>
+      <p class="small" style="text-align:center;margin-top:8px" id="expXlsxNote"></p>
+    </div>
+
+    <!-- 已完成（重复进入提示） -->
+    <div id="expCompleted" style="display:none">
+      <div class="note warn-n">
+        <b>本浏览器已存在实验记录，无法重新开始正式实验。</b><br>
+        研究编号：<b id="expCompletedPid">—</b><br>
+        同一浏览器已参与过一次，系统默认保留原编号、原实验条件与原有行为记录，不再生成新的参与者编号，以避免重复提交。<br>
+        如确属研究需要重新参与（例如研究者安排的换设备补填），请先与研究主持者确认，再点击下方按钮——该操作会生成一条<b>新的参与者记录</b>，可能被判定为重复数据。
+      </div>
+      <div class="row" style="justify-content:center;margin-top:14px">
+        <button class="btn sec" id="btnExpAgainNew">我确需重新参与（生成新编号，可能产生重复记录）</button>
+      </div>
+      <p class="small" style="text-align:center;margin-top:12px" id="expCompletedServerNote"></p>
+      <div class="row" style="justify-content:center;display:none" id="btnExpCompletedRetryRow">
+        <button class="btn sec" id="btnExpCompletedRetry">重试同步到服务器</button>
       </div>
     </div>
 
@@ -563,26 +599,23 @@ details .dc{margin-top:12px;font-size:13px;line-height:1.8;color:#3a3c44}
     <button class="btn sec" id="btnDownloadCsv">下载 CSV（全部被试）</button>
   </div>
 
-  <h3>变量说明</h3>
+  <h3>变量说明（实验网页导出字段，exp-v2）</h3>
   <div class="kv">
-    <dt>participant_id</dt><dd>自动生成</dd>
-    <dt>AI_label</dt><dd>0 = 无标识 ｜ 1 = AI辅助生成 ｜ 2 = AI生成</dd>
-    <dt>evidence_consistency</dt><dd>0 = 一致 ｜ 1 = 冲突（<b>材料预设值，非被试评分</b>）</dd>
-    <dt>credibility</dt><dd>Q1 · 核心结论可信度 1–7</dd>
-    <dt>verification</dt><dd>0 = 未验证（仅点了"暂不核验"）｜ 1 = 验证（至少点击了一个核验入口）</dd>
-    <dt>verification_count</dt><dd>点击过的核验入口数量（0–4）</dd>
-    <dt>verification_type</dt><dd>点击过的入口标签数组</dd>
-    <dt>verification_time</dt><dd>每个入口的停留秒数数组</dd>
-    <dt>verification_order</dt><dd>点击顺序（用于分析"先查什么"）</dd>
-    <dt>final_judgment</dt><dd>Q3 · 准确性判断 1–7</dd>
-    <dt>need_verification</dt><dd>Q2 · 是否需要进一步核实 1–7</dd>
-    <dt>judgment_confidence</dt><dd>Q4 · 判断信心 1–7（探索性）</dd>
-    <dt>ai_manipulation_check</dt><dd>MC1 · 0=没有 / 1=AI辅助 / 2=AI生成</dd>
-    <dt>consistency_manipulation_check</dt><dd>MC2 · 1–7（操作检验，非自变量）</dd>
-    <dt>resolvability_check</dt><dd>MC3 · 1–7（可化解性，建议保留）</dd>
-    <dt>false_info_check</dt><dd>MC4 · 是否读到明显错误信息</dd>
-    <dt>reading_time_sec</dt><dd>阅读时长（秒）</dd>
+    <dt>participant_id</dt><dd>自动生成（EXP-XXXXXXXX），与实验条件绑定</dd>
+    <dt>AI_label</dt><dd>实际随机分配 · 0 = 无标识 ｜ 1 = AI辅助生成 ｜ 2 = AI生成</dd>
+    <dt>evidence_consistency</dt><dd>实际随机分配 · 0 = 一致 ｜ 1 = 冲突（<b>材料预设值，非被试评分</b>）</dd>
+    <dt>verify_status</dt><dd>not_reached / opened / declined / skipped（严格区分，不混编为 0）</dd>
+    <dt>verification</dt><dd>主 DV · 0 = 未打开任何材料 ｜ 1 = 至少打开 1 份核验材料</dd>
+    <dt>verify_count</dt><dd>打开过的核验材料份数（0–4）</dd>
+    <dt>verify_types</dt><dd>打开过的材料标题数组</dd>
+    <dt>verify_order</dt><dd>打开顺序（用于分析"先查什么"）</dd>
+    <dt>verify.events</dt><dd>完整事件流 {key,type,action:'open'|'close'|'decline',ts}</dd>
+    <dt>server_synced</dt><dd>是否已成功同步到服务端（避免重复提交）</dd>
+    <dt>server_received_at</dt><dd>服务端首次接收时间（participant_id 幂等写入）</dd>
+    <dt>reading_time_sec</dt><dd>阅读新闻时长（秒）</dd>
+    <dt>completion_time_sec</dt><dd>从开始到提交时长（秒）</dd>
   </div>
+  <p class="small">注：正式问卷题项（理解/卷入/可信度/一致性/可核验/错误判断/AI 标识操纵检验/VOI/AI 态度/人口统计）自 exp-v2 起统一由问卷星采集，实验网页不再采集，故本处不再列出。操纵检验答案（问卷星侧）不可反推为实验系统分配的 <code>assigned_condition</code>。</p>
 
   <h3>累计记录表</h3>
   <div id="tableOut" class="small">（暂无记录）</div>
@@ -601,7 +634,7 @@ details .dc{margin-top:12px;font-size:13px;line-height:1.8;color:#3a3c44}
       <tr>
         <td><b>1. AI标识是否改变了来源信息之外的内容？</b></td>
         <td><span class="tag ok">干净</span></td>
-        <td>三个条件共用<b>同一份 HTML 模板</b>与<b>同一份正文文本</b>。AI披露标签仅在一个独立节点（<code>.ai-wrap &gt; .ai-chip</code>）内渲染，不出现在标题、正文、三张信息卡、来源行、配图说明中。标题、发布日期、来源机构名、记者署名四个字段在 6 个条件中逐字相同。<br><b>本轮改进</b>：标签改为「<b>AI 辅助 ⓘ</b>」/「<b>AI 生成 ⓘ</b>」简短 chip，主标签<b>均只有 5 个字符</b>，视觉规格（位置、字号、颜色、圆角、内边距）三条件完全一致；完整说明放在点击 ⓘ 后的展开层。<b>主标签只操纵"AI 参与程度"一个维度</b>，不再出现"是否经人工核对 / 撰写"（旧版把这一条混在主标签里，等于同时操纵了两个维度）。</td>
+        <td>三个条件共用<b>同一份 HTML 模板</b>与<b>同一份正文文本</b>。AI披露标签仅在一个独立节点（<code>.ai-wrap &gt; .ai-label</code>）内渲染，不出现在标题、正文、三张信息卡、来源行中。标题、发布日期、来源机构名、记者署名四个字段在 6 个条件中逐字相同。<br><b>本轮（第二阶段）改进</b>：标签改为<b>文本开头标识</b>「<b>AI辅助生成</b>」/「<b>AI生成</b>」，两条件视觉规格（位置、字号、字体、颜色、背景、边距）完全一致；<b>不再使用 ⓘ 或点击展开说明</b>。<b>主标签只操纵"AI 参与程度"一个维度</b>，不出现"是否经人工核对 / 撰写"。</td>
       </tr>
       <tr>
         <td><b>2. 一致/冲突是否改变了证据数量？</b></td>
@@ -631,7 +664,7 @@ details .dc{margin-top:12px;font-size:13px;line-height:1.8;color:#3a3c44}
       <tr>
         <td><b>7. 参与者是否可能猜到研究目的？</b></td>
         <td><span class="tag ok">低—中</span>（较上版下降）</td>
-        <td>本轮消除了三个主要线索：<br>① 删除了证据三的裁判式专家结论——被试现在<b>必须自己</b>比较前两项结果，不会被告知"这里有问题"；<br>② 核验区标题从「你<b>想进一步核实</b>这条消息吗？」改为中性的「如果你<b>希望进一步了解</b>这项研究，可以查看以下相关材料」；<br>③ AI 标签改为真实平台常见的「AI 辅助 ⓘ」灰色 chip，不再是通栏说明文字。<br><b>残留风险</b>：AI 标签本身仍在提示研究主题（这是自变量的必然属性，无法消除）。处置：加入一个与主任务无关的填充题（如"请评价这则新闻的写作风格"）。</td>
+        <td>本轮消除了三个主要线索：<br>① 删除了证据三的裁判式专家结论——被试现在<b>必须自己</b>比较前两项结果，不会被告知"这里有问题"；<br>② 核验区标题从「你<b>想进一步核实</b>这条消息吗？」改为中性的「如果你<b>希望进一步了解</b>这项研究，可以查看以下相关材料」；<br>③ AI 标签改为文本开头灰色标识「AI辅助生成」/「AI生成」，不再是通栏说明文字，也不使用 ⓘ。<br><b>残留风险</b>：AI 标签本身仍在提示研究主题（这是自变量的必然属性，无法消除）。处置：加入一个与主任务无关的填充题（如"请评价这则新闻的写作风格"）。</td>
       </tr>
       <tr>
         <td><b>8. 是否需要专业知识？</b></td>
@@ -646,7 +679,7 @@ details .dc{margin-top:12px;font-size:13px;line-height:1.8;color:#3a3c44}
       <tr>
         <td><b>10. 两个自变量是否可以被理论上区分？</b></td>
         <td><span class="tag ok">可以</span></td>
-        <td>AI标识操纵的是「谁/什么生产了这条内容」（来源·生产过程层）；一致性操纵的是「这篇内容<span style="color:#b03a3a">内部</span>的几项结果是否互相支持」（内容·证据层）。两者分属不同层级，<b>三条来源标签在两版中逐字恒定</b>，因此构念上正交。这一点是本设计相对"来源可信度×内容"方案的决定性优势。<br><b>补充</b>：本轮把 AI 标签从"通栏说明文字"改为"简短 chip + 展开"，其<b>视觉位置（署名行下方）、字号、颜色、圆角、内边距三条件完全一致</b>，只改变文字（无 / AI 辅助 / AI 生成），不引入"人工是否撰写 / 核对"这一额外变量。</td>
+        <td>AI标识操纵的是「谁/什么生产了这条内容」（来源·生产过程层）；一致性操纵的是「这篇内容<span style="color:#b03a3a">内部</span>的几项结果是否互相支持」（内容·证据层）。两者分属不同层级，<b>三条来源标签在两版中逐字恒定</b>，因此构念上正交。这一点是本设计相对"来源可信度×内容"方案的决定性优势。<br><b>补充</b>：本轮把 AI 标签从"通栏说明文字"改为"文本开头标识"，其<b>视觉位置（正文开头）、字号、颜色、背景、边距三条件完全一致</b>，只改变文字（无 / AI辅助生成 / AI生成），不引入"人工是否撰写 / 核对"这一额外变量。</td>
       </tr>
       <tr>
         <td><b>11. 专家 / 权威判断出现频率</b></td>
@@ -798,16 +831,20 @@ details .dc{margin-top:12px;font-size:13px;line-height:1.8;color:#3a3c44}
   </ul>
 </div>
 
-  <!-- ⑦ 预测试参与者作答（研究者可见，含 condition；参与者页面不显示此标签） -->
+  <!-- ⑦ 实验参与者数据（研究者可见，含 condition；参与者页面不显示此标签） -->
   <div class="pane" id="p7">
-    <h2>⑦ 预测试参与者作答（本机累计）</h2>
-    <p class="sub">参与者在「预测试模式」下的作答。字段含 material condition（<b>研究者可见，参与者页面不可见</b>），无个人信息。数据存于本机浏览器，刷新不丢失；换设备需参与者用完成页「复制我的回答」发给研究者。</p>
+    <h2>⑦ 实验参与者数据（本机浏览器本地查看）</h2>
+    <p class="sub" style="border-left:3px solid var(--warn);padding-left:10px;color:var(--warn)">
+      ⚠ <b>数据范围说明：</b>本面板仅显示<b>当前浏览器本地</b>存储的实验记录（<code>localStorage</code>），
+      并非跨设备的集中数据库。不同参与者使用不同设备或浏览器完成时，这里的记录<b>不会自动汇总</b>。
+      研究者回收正式数据，应依赖参与者在问卷星上传的 <code>experiment_&lt;编号&gt;.xlsx</code> 文件，
+      或在已部署服务端（见 <code>docs/服务端部署与后台说明.md</code>）后查看集中记录。
+    </p>
+    <p class="sub">参与者在「实验模式」下的作答与核查行为日志。字段含实验条件与核查状态（<b>研究者可见，参与者页面不可见</b>），无个人信息。以下为只读查看，不含导出按钮（导出统一由参与者端 XLSX 完成）。</p>
     <div class="row" style="margin:12px 0">
-      <button class="btn sec" id="btnPilotCsv">下载预测试 CSV</button>
-      <button class="btn sec" id="btnPilotJsonAll">下载预测试 JSON</button>
-      <button class="btn sec" id="btnPilotClear">清空本机预测试记录</button>
+      <button class="btn sec" id="btnExpClear">清空本机实验记录（仅本地，不可恢复）</button>
     </div>
-    <div id="pilotTable" class="small">（暂无记录）</div>
+    <div id="expTable" class="small">（暂无记录）</div>
   </div>
 
 </div><!-- /shell -->
@@ -817,6 +854,8 @@ details .dc{margin-top:12px;font-size:13px;line-height:1.8;color:#3a3c44}
 <button id="researcherEntry" class="researcher-entry" title="研究者入口（被试不可见）">研究者</button>
 <button id="researcherBack" class="researcher-back">← 返回预测试</button>
 
+<!-- 零依赖 XLSX 生成器（本地文件，无任何第三方依赖 / 网络请求） -->
+<script src="xlsx-writer.js"></script>
 <script>
 /* ============================================================
    数据模型
@@ -834,14 +873,48 @@ const CONS = [
 /* AI披露标签 —— 视觉规格三条件一致，主标签只操纵「AI 参与程度」一个维度 */
 const AI_DISCLOSURE = {
   0: null,
-  1: { label:"AI 辅助", note:"本文的写作过程使用了 AI 辅助工具。" },
-  2: { label:"AI 生成", note:"本文的内容由 AI 系统自动生成。" }
+  1: { label:"AI辅助生成" },
+  2: { label:"AI生成" }
 };
-/* 兼容旧引用名 */
+/* 兼容旧引用名（不再附加 ⓘ 或展开说明） */
 const AI_TEXT = {
   0: null,
-  1: AI_DISCLOSURE[1].label + " ⓘ",
-  2: AI_DISCLOSURE[2].label + " ⓘ"
+  1: AI_DISCLOSURE[1].label,
+  2: AI_DISCLOSURE[2].label
+};
+
+/* ============================================================
+   实验运行配置（研究者按需修改，其余勿改）
+   —— 所有外部交互默认关闭，确保"不擅自接入第三方数据收集服务"
+   ============================================================ */
+const EXP_CONFIG = {
+  /* 问卷星正式问卷地址：留空则完成页只显示编号与手动回填说明。
+     填写后，系统会在链接后追加 ?pid=<研究编号>；若问卷星支持 URL 参数带入，
+     编号可自动填入，否则参与者手动粘贴到问卷的"研究编号"一栏。
+     注意：自动带入需问卷星「参数设置」中存在名为 pid 的参数并映射到第一题（研究编号）；
+     若未配置，参与者仍需手动填写，编号始终以完成页显示的为准。 */
+  SURVEY_URL: "https://v.wjx.cn/vm/OYcv8er.aspx",
+
+  /* 问卷星接收编号的参数名（仅当 SURVEY_URL 非空且问卷星支持参数带入时生效） */
+  SURVEY_ID_PARAM: "pid",
+
+  /* 可选：集中保存服务端「提交」端点（Cloudflare Pages Functions 或 Worker）。
+     格式示例：https://<你的域名>/api/submit
+     留空 = 纯本地保存（localStorage），不向任何服务器发送数据。
+     填写后，完成提交会 POST 一条 JSON 记录；必须等待服务端返回 {ok:true}
+     才视为成功，失败仅提示并提供「重试同步」，绝不虚报成功。
+     研究者后台：同域 /admin 页面（需配置 ADMIN_PASSWORD / JWT_SECRET）。
+     后端实现见 functions/_shared/app.mjs 与 docs/服务端部署与后台说明.md。 */
+  DATA_ENDPOINT: "",
+
+  /* 数据格式版本（导出文件与每条记录均带此字段，便于后期解析）
+     exp-v2 相对 exp-v1 的变化：实验网页不再采集正式问卷题项（Q1–Q4、AI 标识
+     操纵检验、开放题、阅读理解题），这些统一由问卷星接管；participant_summary
+     相应移除上述自陈字段，仅保留实验分配、核验行为与必要技术状态。 */
+  SCHEMA_VERSION: "exp-v2",
+
+  /* 研究材料主题提示（仅用于知情同意与界面文案，不影响操纵） */
+  TOPIC: "手机护眼模式对视疲劳的作用"
 };
 
 /* ============================================================
@@ -964,12 +1037,7 @@ function renderNews(ai, cons, opt){
         <span>阅读 1.2 万</span>
       </div>
 
-      ${ disc ? `<div class="ai-wrap">
-        <span class="ai-chip" role="button" tabindex="0" aria-label="展开披露说明">${disc.label}<i class="ii">i</i></span>
-        <div class="ai-note${S.aiOpen?' on':''}">${disc.note}</div>
-      </div>` : `` }
-
-      <div class="ns-figure">${FIGURE_SVG}<div class="ns-cap">${CONST_PARTS.cap}</div></div>
+      ${ disc ? `<div class="ai-wrap"><span class="ai-label">${disc.label}</span></div>` : `` }
 
       <p class="ns-lead">${CONST_PARTS.lead}</p>
       <p class="ns-p">${CONST_PARTS.p1}</p>
@@ -1049,15 +1117,20 @@ const VERIFY = [
    状态
    ============================================================ */
 const S = {
-  ai:0, cons:0, highlight:true, sum:false, aiOpen:false,
+  ai:0, cons:0, highlight:true, sum:false,
   mode:"browse",           // browse | flow
   cur:null,                // 当前被试记录
   all:[],                  // 全部被试记录
   quiz:[],                 // 材料理解自检记录（开发者测试，不入正式数据）
   readStart:null,
-  pilot:null,              // 当前预测试记录（进行中）
-  pilotAll:[],             // 预测试累计记录（本机）
-  pilotStart:null
+  pilot:null,              // 当前预测试记录（进行中，旧版兼容，已不再使用）
+  pilotAll:[],             // 预测试累计记录（本机，旧版兼容，已不再使用）
+  pilotStart:null,
+
+  // —— 正式实验参与者流程（新增） ——
+  session:null,            // 当前参与者会话（含条件、步骤、作答、核查日志）
+  expRecords:[],           // 已完成参与者记录（本机累计，键 exp_records）
+  expStart:null
 };
 let pidSeq = 1;
 
@@ -1101,7 +1174,7 @@ function condName(ai, cons){
 }
 function aiDescText(ai){
   const d = AI_DISCLOSURE[ai];
-  return d ? `标签「${d.label} ⓘ」 → 展开：「${d.note}」` : "（本条件不渲染任何标识节点）";
+  return d ? `文本标识：「${d.label}」（无 ⓘ、无展开说明）` : "（本条件不渲染任何标识节点）";
 }
 
 /* ============================================================
@@ -1209,7 +1282,7 @@ function updateLenCheck(){
         <tr><td><b>正文中统计术语出现次数</b></td><td>${cnt(t0,reStat)}</td><td>${cnt(t1,reStat)}</td><td>0（<b>已清除</b>）</td></tr>
         <tr><td><b>正文中专家/权威判断出现次数</b></td><td>${cnt(t0,reExpert)}</td><td>${cnt(t1,reExpert)}</td><td>0（<b>已改为研究背景信息</b>）</td></tr>
         <tr><td>专业指标名出现次数（含折叠区）</td><td>${cnt(t0,rePro)}</td><td>${cnt(t1,rePro)}</td><td>0（<b>仅出现在折叠区，正文 0 次</b>）</td></tr>
-        <tr><td>AI披露标签（主标签 / 展开说明）</td><td colspan="3">无标识：不渲染 ｜ AI辅助：「AI 辅助 ⓘ」+ 展开 19 字 ｜ AI生成：「AI 生成 ⓘ」+ 展开 17 字（<b>主标签同为 5 字符</b>）</td></tr>
+        <tr><td>AI披露标签（文本标识）</td><td colspan="3">无标识：不渲染 ｜ AI辅助生成：文本标识「AI辅助生成」｜ AI生成：文本标识「AI生成」（两条件标签位置/字号/字体/颜色/背景/边距完全一致，无 ⓘ、无展开说明）</td></tr>
         <tr><td>渲染后 HTML 长度（一致版 / 冲突版）</td><td colspan="3" class="mono" style="font-size:11.5px">${htmlLen}</td></tr>
       </tbody>
     </table>
@@ -1278,8 +1351,8 @@ function buildMC(){
       </div>
       <div class="small" style="margin:10px 0 6px">第二问（若第一问选“有”）：标注的具体表述是哪一种？</div>
       <div class="opts" id="mc1b">
-        <button class="opt" data-v="1">大意是「使用了 AI 辅助工具」</button>
-        <button class="opt" data-v="2">大意是「由 AI 系统生成」</button>
+        <button class="opt" data-v="1">大意是「AI 辅助生成」</button>
+        <button class="opt" data-v="2">大意是「AI 生成」</button>
         <button class="opt" data-v="8">有标注，但记不清具体表述</button>
       </div>
     </div>`;
@@ -1341,20 +1414,22 @@ function buildVerifyMount(){
     });
   });
 
-  // 核验内容容器
+  // 核验内容容器（模态弹窗，覆盖步骤3，关闭后返回原步骤且保留滚动位置）
   if(!$("#vPanel")){
     const p = document.createElement("div");
-    p.id = "vPanel"; p.style.display = "none";
+    p.id = "vPanel"; p.className = "exp-modal-backdrop";
     p.innerHTML = `
-      <div class="card" style="border-color:#9fbfd8;background:#fbfdff">
-        <div class="row" style="justify-content:space-between;margin-bottom:10px">
-          <div id="vPanelTitle" style="font-size:13.5px;font-weight:600"></div>
+      <div class="exp-modal">
+        <div class="exp-modal-head">
+          <div id="vPanelTitle" style="font-size:14px;font-weight:600"></div>
           <button class="btn sec" id="vPanelClose" style="padding:6px 14px;font-size:12.5px">关闭并返回新闻</button>
         </div>
-        <div id="vPanelBody" style="font-size:13px;line-height:1.85;color:#33353c"></div>
+        <div id="vPanelBody" class="exp-modal-body"></div>
       </div>`;
-    $("#vMount").parentNode.insertBefore(p, $("#vCounter"));
-    $("#vPanelClose").addEventListener("click", closeVerify);
+    document.body.appendChild(p);
+    // 注意：必须包裹箭头函数，否则事件对象会被当成 key 传入，导致关闭失效
+    $("#vPanelClose").addEventListener("click", ()=>closeVerify(null,false));
+    p.addEventListener("click", (e)=>{ if(e.target === p) closeVerify(null,false); });
   }
 }
 
@@ -1373,7 +1448,7 @@ function openVerify(key, btn){
   S.cur._verifyT0[key] = performance.now();
   $("#vPanelTitle").textContent = v.t;
   $("#vPanelBody").innerHTML = v.body;
-  $("#vPanel").style.display = "block";
+  $("#vPanel").classList.add("on");
   $$("#vMount .vbtn").forEach(b=> b.classList.toggle("on", b.dataset.k===key));
   $("#vCounter").textContent = `已查看材料：${S.cur.verification_count} 个 · 已打开：${S.cur.verification_type.join("、")||"—"}`;
   refreshJson();
@@ -1389,11 +1464,9 @@ function closeVerify(key, silent){
       .map(kk=>({type: (VERIFY.find(x=>x.key===kk)||{}).t, sec: S.cur._verifyDwell[kk]}));
   }
   if(!silent){
-    $("#vPanel").style.display = "none";
+    $("#vPanel").classList.remove("on");   // 仅隐藏弹窗，底层步骤3滚动位置保持不变
     $$("#vMount .vbtn").forEach(b=> b.classList.remove("on"));
     toast("已关闭，可回到新闻继续判断");
-    const s3 = $("#step3");
-    window.scrollTo({top: s3.offsetTop - 100, behavior:"smooth"});
   }
   refreshJson();
 }
@@ -1503,7 +1576,7 @@ function switchTab(pid){
   $$(".pane").forEach(p=> p.classList.toggle("on", p.id===pid));
   if(pid==="p5") updateLenCheck();
   if(pid==="p6") refreshQuizCond();
-  if(pid==="p7") renderPilotTable();
+  if(pid==="p7") renderExpTable();
 }
 function bindTabs(){
   $$(".tab").forEach(t=> t.addEventListener("click", ()=> switchTab(t.dataset.p)));
@@ -1641,14 +1714,7 @@ function init(){
   refreshJson();
   renderProgress();
 
-  /* AI 披露标签：点击 chip / ⓘ 展开或收起完整说明（事件委托，跨重绘有效） */
-  document.addEventListener("click", (e)=>{
-    const chip = e.target.closest(".ai-chip");
-    if(!chip) return;
-    S.aiOpen = !S.aiOpen;
-    renderAll();
-    if(S.pilot) $("#pilotNews").innerHTML = renderNews(S.pilot.AI_label, S.pilot.evidence_consistency, {highlight:false, sum:false});
-  });
+  /* AI 披露标签现为文本开头标识，无 ⓘ / 展开交互，无需额外点击处理 */
 
   $("#btnRand").addEventListener("click", ()=>{
     const ai = Math.floor(Math.random()*3), c = Math.floor(Math.random()*2);
@@ -1702,66 +1768,582 @@ function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function startPilot(){
-  const ai = Math.floor(Math.random()*3), c = Math.floor(Math.random()*2);
-  S.pilot = {
-    participant_id: "P" + String(pidSeq++).padStart(3,"0") + "-" + Math.random().toString(36).slice(2,6).toUpperCase(),
-    AI_label: ai, evidence_consistency: c,
-    q1:null, q2_consistency:null, q3_resolvability:null, q4_false_info:null,
-    open_feedback:"", completion_time_sec:null
+/* ============================================================
+   实验参与者流程（正式实验）
+   —— 知情同意 → 固定随机分组 → 阅读 → 核查任务 → 理解题/操纵检验 → 完成页问卷星
+   —— 条件与编号绑定并存于本机会话，刷新/后退可恢复，不静默重分配
+   ============================================================ */
+
+/* —— 持久化键 —— */
+const LS_SESSION = "exp_session";     // 进行中/已完成的单参与者会话
+const LS_RECORDS = "exp_records";     // 已完成记录数组
+
+function genParticipantId(){
+  const rand = Math.random().toString(36).slice(2,10).toUpperCase();
+  return "EXP-" + rand;
+}
+
+function loadExpRecords(){
+  try{ const d = JSON.parse(localStorage.getItem(LS_RECORDS)||"[]"); if(Array.isArray(d)) S.expRecords = d; }catch(e){ S.expRecords = []; }
+}
+function saveExpRecords(){
+  try{ localStorage.setItem(LS_RECORDS, JSON.stringify(S.expRecords)); }catch(e){}
+}
+function loadSession(){
+  try{ const d = JSON.parse(localStorage.getItem(LS_SESSION)||"null"); return d; }catch(e){ return null; }
+}
+function saveSession(){ try{ localStorage.setItem(LS_SESSION, JSON.stringify(S.session)); }catch(e){} }
+function clearSession(){ try{ localStorage.removeItem(LS_SESSION); }catch(e){} }
+
+/* —— 核查状态推导（纯函数，供 UI 与测试共用） ——
+   严格区分五种状态，绝不把"明确不查看 / 未选择 / 未到达 / 异常"混编为 0：
+     not_reached : 从未到达核查步骤
+     opened      : 至少打开过 1 份材料（主 DV = 1）
+     declined    : 到达但明确点击"暂不查看"，打开数 = 0
+     skipped     : 到达、未打开任何材料、也未明确"暂不查看"（直接点了下一步）
+     abandoned   : 到达后无完成记录（仅当整条记录 incomplete 时叠加标记）
+*/
+function deriveVerifyStatus(rec){
+  const v = rec && rec.verify;
+  if(!v || !v.reached) return "not_reached";
+  if(v.opened_any) return "opened";
+  if(v.declined) return "declined";
+  return "skipped";
+}
+
+/* —— 步骤切换 —— */
+const EXP_STEPS = ["expConsent","expRead","expVerify","expQuestions","expDone"];
+function showExpStep(id){
+  EXP_STEPS.forEach(s=>{ const el = $("#"+s); if(el) el.style.display = (s===id ? "block" : "none"); });
+  const c = $("#expCompleted"); if(c) c.style.display = "none";
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function startExperiment(){
+  // 生成固定条件 + 编号，写入会话（一次分配，后续刷新不重分配）
+  const ai = Math.floor(Math.random()*3);
+  const c  = Math.floor(Math.random()*2);
+  const now = Date.now();
+  S.session = {
+    schema_version: EXP_CONFIG.SCHEMA_VERSION,
+    participant_id: genParticipantId(),
+    AI_label: ai,
+    evidence_consistency: c,
+    news_version: "AI_label="+ai+" · evidence_consistency="+c,
+    consent_given: true,
+    consent_ts: now,
+    status: "in_progress",
+    step: 1,
+    started_at: now,
+    last_active: now,
+    reading_time_sec: null,
+    // 注：自 exp-v2 起，理解题 / 操纵检验 / 开放题 / 阅读理解题等正式问卷题项
+    // 统一由问卷星接管，实验网页不再采集；相应字段已从会话与导出中移除。
+    completion_time_sec: null,
+    server_synced: false,            // 是否已成功同步到服务端（防止重复提交）
+    server_received_at: null,        // 服务端首次接收时间
+    // 核查行为日志
+    verify: {
+      reached: false, declined: false, opened_any: false, count: 0,
+      types: [], order: [],
+      open: {}, t0: {}, dwell: {},
+      events: []                         // {key,type,action:'open'|'close'|'decline',ts}
+    }
   };
-  S.pilotStart = performance.now();
-  S.aiOpen = false;
-  $("#pilotNews").innerHTML = renderNews(ai, c, {highlight:false, sum:false});
-  $("#pilotIntro").style.display = "none";
-  $("#pilotRead").style.display = "block";
-  $("#pilotQs").style.display = "none";
-  $("#pilotDone").style.display = "none";
-  $$("#pq1 .opt, #pq4 .opt").forEach(x=> x.classList.remove("on"));
-  ["pq2","pq3"].forEach(id=>{ const el=$("#"+id); if(el) el.innerHTML=""; });
-  window.scrollTo({top:0, behavior:"smooth"});
+  saveSession();
+  $("#expNews").innerHTML = renderNews(ai, c, {highlight:false, sum:false});
+  S.expStart = performance.now();
+  showExpStep("expRead");
 }
 
-function buildPilotScales(){
-  buildScale("pq2", 1, 7, v=>{ if(S.pilot) S.pilot.q2_consistency = v; });
-  buildScale("pq3", 1, 7, v=>{ if(S.pilot) S.pilot.q3_resolvability = v; });
+function expReadDone(){
+  if(!S.session) return;
+  S.session.reading_time_sec = Math.round((performance.now() - S.expStart)/1000);
+  S.session.step = 2;
+  S.session.last_active = Date.now();
+  S.session.verify.reached = true;          // 到达核查步骤
+  saveSession();
+  buildPilotVerify();
+  // 在核查步骤内嵌入新闻正文，使关闭材料后能回到新闻继续阅读
+  // 注意：必须使用已保存到会话的条件，不能引用 startExperiment 的局部变量（作用域外未定义）
+  $("#expNewsVerify").innerHTML = renderNews(S.session.AI_label, S.session.evidence_consistency, {highlight:false, sum:false});
+  $("#expVCounter").textContent = "已查看材料：0 个";
+  showExpStep("expVerify");
 }
 
-function submitPilot(){
-  if(!S.pilot){ toast("请先开始阅读"); return; }
-  if(S.pilot.q1===null || S.pilot.q2_consistency===null || S.pilot.q3_resolvability===null || S.pilot.q4_false_info===null){
-    toast("请先答完 Q1–Q4 四个问题"); return;
+/* —— 核查任务（参与者版，写入 S.session.verify） —— */
+function buildPilotVerify(){
+  const m = $("#expVMount");
+  m.innerHTML = `
+    <div class="vbtn" data-k="none" style="margin-bottom:10px">
+      <div class="vt"><span class="dot"></span>暂不查看其他材料</div>
+      <div class="vd">直接进入下一步。之后仍可返回查看材料。</div>
+    </div>` + VERIFY.map(v=>`
+    <div class="vbtn" data-k="${v.key}" style="margin-bottom:10px">
+      <div class="vt"><span class="dot"></span>${v.t}</div>
+      <div class="vd">${v.d}</div>
+    </div>`).join('');
+  Array.from(m.querySelectorAll(".vbtn")).forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const k = b.dataset.k;
+      if(k==="none"){ expDeclineVerify(); return; }
+      openPilotVerify(k, b);
+    });
+  });
+  // 模态弹窗：覆盖在新闻之上，关闭后返回新闻且保留滚动位置
+  if(!$("#expVPanel")){
+    const p = document.createElement("div");
+    p.id = "expVPanel"; p.className = "exp-modal-backdrop";
+    p.innerHTML = `
+      <div class="exp-modal">
+        <div class="exp-modal-head">
+          <div id="expVPanelTitle" style="font-size:14px;font-weight:600"></div>
+          <button class="btn sec" id="expVPanelClose" style="padding:6px 14px;font-size:12.5px">关闭并返回新闻</button>
+        </div>
+        <div id="expVPanelBody" class="exp-modal-body"></div>
+      </div>`;
+    document.body.appendChild(p);
+    $("#expVPanelClose").addEventListener("click", ()=>closePilotVerify(null,false));
+    // 点击遮罩空白处也可关闭（不误记为拒绝核验）
+    p.addEventListener("click", (e)=>{ if(e.target === p) closePilotVerify(null,false); });
   }
-  S.pilot.open_feedback = ($("#pqOpen").value||"").trim();
-  S.pilot.completion_time_sec = Math.round((performance.now()-S.pilotStart)/1000);
-  S.pilotAll.push(JSON.parse(JSON.stringify(S.pilot)));
-  try{ localStorage.setItem("pilot_data", JSON.stringify(S.pilotAll)); }catch(e){}
-  $("#pilotQs").style.display = "none";
-  $("#pilotDone").style.display = "block";
-  window.scrollTo({top:0, behavior:"smooth"});
-  toast("作答已保存，感谢参与");
 }
 
-function renderPilotTable(){
-  if(!S.pilotAll.length){ $("#pilotTable").innerHTML = "（暂无记录）"; return; }
-  const cols = ["participant_id","AI_label","evidence_consistency","q1","q2_consistency","q3_resolvability","q4_false_info","open_feedback","completion_time_sec"];
-  const head = cols.map(c=>`<th>${c}</th>`).join('');
-  const rows = S.pilotAll.map(r=> `<tr>${cols.map(c=>{
-    let v = r[c];
-    if(c==="open_feedback") v = v ? escapeHtml(String(v).slice(0,300)) : "—";
-    else v = (v===null||v==="") ? "—" : v;
-    return `<td>${v}</td>`;
-  }).join('')}</tr>`).join('');
-  $("#pilotTable").innerHTML = `<table class="t"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+function openPilotVerify(key, btn){
+  const rec = S.session.verify;
+  const v = VERIFY.find(x=>x.key===key);
+  Object.keys(rec.open).forEach(k=>{ if(rec.open[k] && k!==key) closePilotVerify(k, true); });
+  if(!rec.open[key]){
+    rec.open[key] = true;
+    rec.types.push(v.t);
+    rec.order.push(v.icon + " " + v.t);
+    rec.count = rec.types.length;
+    rec.opened_any = true;
+  }
+  rec.t0[key] = performance.now();
+  rec.events.push({ key, type:v.t, action:"open", ts: Date.now() });
+  $("#expVPanelTitle").textContent = v.t;
+  $("#expVPanelBody").innerHTML = v.body;
+  $("#expVPanel").classList.add("on");
+  Array.from($("#expVMount").querySelectorAll(".vbtn")).forEach(b=> b.classList.toggle("on", b.dataset.k===key));
+  refreshExpVCounter();
+  S.session.last_active = Date.now();
+  saveSession();
 }
 
-function downloadPilotCsv(){
-  if(!S.pilotAll.length){ toast("暂无预测试数据"); return; }
-  const cols = ["participant_id","AI_label","evidence_consistency","q1","q2_consistency","q3_resolvability","q4_false_info","open_feedback","completion_time_sec"];
-  const esc = v => { if(v===null||v===undefined||v==="") return ""; return '"' + String(v).replace(/"/g,'""') + '"'; };
-  const csv = "﻿" + cols.join(",") + "\n" + S.pilotAll.map(r=> cols.map(c=>esc(r[c])).join(",")).join("\n");
-  download("pilot_answers.csv", csv, "text/csv;charset=utf-8");
-  toast("已下载预测试 CSV");
+function closePilotVerify(key, silent){
+  const rec = S.session.verify;
+  const k = key || (Array.from($("#expVMount").querySelectorAll(".vbtn.on"))[0] ? Array.from($("#expVMount").querySelectorAll(".vbtn.on"))[0].dataset.k : null);
+  if(k && rec.open[k] && rec.t0[k]){
+    const dwell = Math.max(0, Math.round((performance.now() - rec.t0[k])/1000));
+    rec.dwell[k] = (rec.dwell[k]||0) + dwell;
+    rec.t0[k] = null;
+    rec.events.push({ key:k, type:(VERIFY.find(x=>x.key===k)||{}).t, action:"close", ts: Date.now() });
+    rec.time = Object.keys(rec.dwell).map(kk=>({
+      type: (VERIFY.find(x=>x.key===kk)||{}).t, sec: rec.dwell[kk]
+    }));
+  }
+  if(!silent){
+    $("#expVPanel").classList.remove("on");   // 仅隐藏弹窗，底层新闻滚动位置保持不变
+    Array.from($("#expVMount").querySelectorAll(".vbtn")).forEach(b=> b.classList.remove("on"));
+    toast("已关闭，可回到新闻继续判断");
+  }
+  refreshExpVCounter();
+  S.session.last_active = Date.now();
+  saveSession();
+}
+
+function expDeclineVerify(){
+  const rec = S.session.verify;
+  rec.declined = true;
+  rec.events.push({ key:"none", type:"暂不查看", action:"decline", ts: Date.now() });
+  toast("已选择暂不查看");
+  refreshExpVCounter();
+  S.session.last_active = Date.now();
+  saveSession();
+}
+
+function refreshExpVCounter(){
+  const rec = S.session.verify;
+  $("#expVCounter").textContent = "已查看材料：" + rec.count + " 个"
+    + (rec.declined ? " · 已选择暂不查看" : "")
+    + (rec.opened_any ? " · 已打开：" + (rec.types.join("、")||"—") : "");
+}
+
+/* —— 理解题 / 操纵检验 —— */
+function bindOptGroup(sel, cb){
+  const grp = $(sel); if(!grp) return;
+  Array.from(grp.querySelectorAll(".opt")).forEach(b=>{
+    b.addEventListener("click", ()=>{
+      Array.from(grp.querySelectorAll(".opt")).forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      cb(b);
+    });
+  });
+}
+function setOptOn(sel, val, attr){
+  const grp = $(sel); if(!grp) return;
+  Array.from(grp.querySelectorAll(".opt")).forEach(b=>{
+    const v = attr==="code" ? b.dataset.code : b.dataset.v;
+    b.classList.toggle("on", v===String(val));
+  });
+}
+function setScaleOn(id, val){
+  const el = $("#"+id); if(!el) return;
+  Array.from(el.children).forEach(b=> b.classList.toggle("on", b.dataset.v===String(val)));
+}
+
+function buildExpQuestions(){
+  // exp-v2：实验网页不再采集正式问卷题项（统一由问卷星接管），
+  // 本步骤仅作为「进入正式问卷前说明」的过渡页，无需绑定任何作答控件。
+}
+
+function restoreExpAnswers(sess){
+  // exp-v2：正式问卷题项已迁移至问卷星，会话中不再保存这些字段，此处无需恢复。
+}
+
+/* —— 提交 —— */
+function submitExperiment(){
+  if(!S.session){ toast("请先开始实验"); return; }
+  const s = S.session;
+  // exp-v2：实验网页不再采集正式问卷题项（统一由问卷星接管），
+  // 因此本步骤（进入正式问卷前说明）无网页内作答需要校验，直接进入完成页。
+  s.completion_time_sec = Math.round((performance.now() - S.expStart)/1000);
+  s.status = "completed";
+  s.completed_at = Date.now();
+  s.last_active = Date.now();
+  s.verify_status = deriveVerifyStatus(s);
+  s.verification = s.verify.opened_any ? 1 : 0;   // 主 DV：至少打开 1 份 = 1
+  const rec = JSON.parse(JSON.stringify(s));
+  delete rec.verify.t0;                            // 剔除临时计时字段
+  S.expRecords.push(rec);
+  saveExpRecords();
+  saveSession();                                    // 保留 completed 标记，防重复进入
+  showExpDone(rec);
+}
+
+function showExpDone(rec){
+  $("#expPidBig").textContent = rec.participant_id;
+  const base = EXP_CONFIG.SURVEY_URL || "";
+  const a = $("#btnExpSurvey");
+  if(base){
+    const sep = base.includes("?") ? "&" : "?";
+    a.href = base + sep + encodeURIComponent(EXP_CONFIG.SURVEY_ID_PARAM) + "=" + encodeURIComponent(rec.participant_id);
+    a.style.pointerEvents = "auto";
+    a.classList.remove("sec");
+    a.textContent = "前往填写正式问卷（问卷星）";
+    $("#expSurveyHint").textContent = "点击下方按钮将打开正式问卷，您的研究编号会自动带入。";
+  }else{
+    a.removeAttribute("href");
+    a.style.pointerEvents = "none";
+    a.classList.add("sec");
+    a.textContent = "正式问卷链接尚未配置";
+    $("#expSurveyHint").innerHTML = "研究者尚未配置问卷星地址。请手动把您的研究编号 <b>"+rec.participant_id+"</b> 填写到正式问卷的「研究编号」一栏。";
+  }
+  const note = $("#expServerNote");
+  if(EXP_CONFIG.DATA_ENDPOINT){
+    if(S.session && S.session.server_synced){
+      setServerSyncNote("ok", S.session.server_received_at);
+    } else {
+      syncToServer(rec); // 自动尝试；失败会显示重试按钮
+    }
+  } else {
+    note.textContent = "（当前为纯本地保存模式，数据仅存于本机浏览器；请下载留存或复制编号到问卷星。）";
+    note.style.color = "var(--ink)";
+    const btn = $("#btnExpRetrySync"); if(btn) btn.style.display = "none";
+  }
+  showExpStep("expDone");
+}
+
+/* —— 服务端同步 ——
+   规则：
+   - 仅在 DATA_ENDPOINT 已配置时尝试；否则纯本地。
+   - 必须等待服务端明确返回 {ok:true} 后才算成功；任何网络错误 /
+     非 2xx / 返回 ok!=true 都视为失败，绝不谎报成功。
+   - 失败保留本机记录，并暴露「重试同步」按钮。
+   - 以 participant_id 为主键，服务端幂等写入，重试不会重复建记录；
+     前端也用 server_synced 标记避免对已同步会话重复提交。 */
+let _syncInFlight = false;
+let _syncDone = false;
+
+function setServerSyncNote(state, ts){
+  const note = $("#expServerNote");
+  const row = $("#btnExpRetrySyncRow");
+  if(!note) return;
+  if(state === "syncing"){
+    note.textContent = "正在同步到研究服务器…";
+    note.style.color = "var(--ink)";
+    if(row) row.style.display = "none";
+  } else if(state === "ok"){
+    note.textContent = "✓ 已同步到研究服务器" + (ts ? "（接收于 "+new Date(ts).toLocaleString()+"）" : "");
+    note.style.color = "var(--ok)";
+    if(row) row.style.display = "none";
+  } else if(state === "fail"){
+    note.innerHTML = "⚠ 同步失败，您的数据已保存在本机。请稍后点击「重试同步」，或在上方下载/复制留存。";
+    note.style.color = "var(--warn)";
+    if(row) row.style.display = "flex";
+  }
+}
+
+async function syncToServer(rec, opts){
+  opts = opts || {};
+  if(!EXP_CONFIG.DATA_ENDPOINT) return "disabled";
+  if(_syncDone && !opts.manual) return "already";
+  if(_syncInFlight) return "inflight";
+  _syncInFlight = true;
+  setServerSyncNote("syncing");
+  try{
+    const res = await fetch(EXP_CONFIG.DATA_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(rec)
+    });
+    const data = await res.json().catch(() => null);
+    if(!res.ok || !data || data.ok !== true){
+      setServerSyncNote("fail");
+      return "fail";
+    }
+    _syncDone = true;
+    if(S.session){
+      S.session.server_synced = true;
+      S.session.server_received_at = data.server_received_at || null;
+      saveSession();
+    }
+    setServerSyncNote("ok", data.server_received_at);
+    return "ok";
+  }catch(e){
+    setServerSyncNote("fail");
+    return "fail";
+  } finally {
+    _syncInFlight = false;
+  }
+}
+
+function downloadExpJson(){
+  if(!S.session){ toast("暂无记录"); return; }
+  download("experiment_record_"+S.session.participant_id+".json", JSON.stringify(S.session, null, 2));
+  toast("已下载我的实验记录");
+}
+function copyExpJson(){
+  if(!S.session){ toast("暂无记录"); return; }
+  navigator.clipboard.writeText(JSON.stringify(S.session,null,2))
+    .then(()=>toast("已复制，可发给研究者")).catch(()=>toast("复制失败，请改用下载"));
+}
+function copyExpPid(){
+  if(!S.session){ toast("暂无编号"); return; }
+  navigator.clipboard.writeText(S.session.participant_id)
+    .then(()=>toast("编号已复制")).catch(()=>toast("复制失败，请手动记录"));
+}
+
+/* —— 实验记录 → XLSX（三工作表）——
+   工作表：
+   1) participant_summary：每名参与者一行，含数据字典中所有参与者级字段 + 核查汇总字段。
+   2) event_log：每次材料打开/关闭/拒绝等事件单独一行，保留原始顺序，不合并重复打开。
+   3) raw_json：每名参与者一行，含匿名编号与完整原始 JSON（直接 JSON.stringify，不重新拼凑）。
+   三个工作表的 participant_id 必须完全一致。
+   raw_json 单元格超过 Excel 单格 32767 字符上限时，由调用方降级处理（绝不静默截断）。 */
+const XLSX_SUM_COLS = [
+  ["participant_id","participant_id", r=>r.participant_id],
+  ["schema_version","schema_version", r=>r.schema_version],
+  ["AI_label","AI_label", r=>r.AI_label],
+  ["AI_label_desc","AI_label_desc", r=>r.AI_label===0?"无标识":(r.AI_label===1?"AI辅助生成":"AI生成")],
+  ["evidence_consistency","evidence_consistency", r=>r.evidence_consistency],
+  ["evidence_consistency_desc","evidence_consistency_desc", r=>r.evidence_consistency===0?"一致":"冲突"],
+  ["news_version","news_version", r=>r.news_version||""],
+  ["consent_given","consent_given", r=>r.consent_given?1:0],
+  ["consent_ts","consent_ts", r=>r.consent_ts||""],
+  ["status","status", r=>r.status||"completed"],
+  ["step","step", r=>r.step||""],
+  ["started_at","started_at", r=>r.started_at||""],
+  ["last_active","last_active", r=>r.last_active||""],
+  ["completed_at","completed_at", r=>r.completed_at||""],
+  ["reading_time_sec","reading_time_sec", r=>r.reading_time_sec==null?"":r.reading_time_sec],
+  ["completion_time_sec","completion_time_sec", r=>r.completion_time_sec==null?"":r.completion_time_sec],
+  // 注：自 exp-v2 起，q1/q2_consistency/q3_resolvability/q4_false_info/ai_awareness/
+  // ai_manipulation_check/open_feedback（及上轮临时加入的 q_reading_*）等正式问卷题项
+  // 已迁移至问卷星，实验网页不再采集，故 participant_summary 不再包含这些列。
+  // 历史 exp-v1 导出的 XLSX 仍保留这些列，可作版本区分与兼容读取。
+  ["verify_status","verify_status", r=>deriveVerifyStatus(r)],
+  ["verification","verification", r=>r.verification==null?0:r.verification],
+  ["verify_reached","verify_reached", r=>r.verify?(r.verify.reached?1:0):""],
+  ["verify_declined","verify_declined", r=>r.verify?(r.verify.declined?1:0):""],
+  ["verify_opened_any","verify_opened_any", r=>r.verify?(r.verify.opened_any?1:0):""],
+  ["verify_count","verify_count", r=>r.verify?(r.verify.count||0):""],
+  ["verify_types","verify_types", r=>r.verify&&r.verify.types&&r.verify.types.length?r.verify.types.join(" | "):""],
+  ["verify_order","verify_order", r=>r.verify&&r.verify.order&&r.verify.order.length?r.verify.order.join(" | "):""],
+  ["server_synced","server_synced", r=>r.server_synced?1:0],
+  ["server_received_at","server_received_at", r=>r.server_received_at||""]
+];
+
+function recordsToXlsxSheets(records){
+  const safe = Array.isArray(records) ? records : [records];
+  // 1) participant_summary
+  const sumHeader = XLSX_SUM_COLS.map(c=>c[1]);
+  const sumRows = safe.map(r=> XLSX_SUM_COLS.map(c=> c[2](r)));
+  // 2) event_log（每个事件一行，保留原始顺序）
+  const evHeader = ["participant_id","event_seq","material_key","material_label","action","ts_epoch_ms","ts_iso"];
+  const evRows = [];
+  safe.forEach(r=>{
+    const evs = (r.verify && Array.isArray(r.verify.events)) ? r.verify.events : [];
+    evs.forEach((e, i)=>{
+      evRows.push([
+        r.participant_id,
+        i+1,
+        (e.key!=null?e.key:""),
+        (e.type!=null?e.type:""),
+        (e.action!=null?e.action:""),
+        (e.ts!=null?e.ts:""),
+        (e.ts!=null?new Date(e.ts).toISOString():"")
+      ]);
+    });
+  });
+  // 3) raw_json（每行完整原始记录；超长时写入明确说明，绝不截断）
+  const rawHeader = ["participant_id","raw_json"];
+  const rawRows = safe.map(r=>{
+    const json = JSON.stringify(r, null, 2);
+    if(json.length > 32767){
+      return [r.participant_id,
+        "⚠ 原始记录序列化后超过 Excel 单单元格 32767 字符上限，已避免写入以防截断。" +
+        "请改用「下载原始 JSON（备用）」获取完整文件，或将本文件连同研究编号一并交给研究者。"];
+    }
+    return [r.participant_id, json];
+  });
+  return [
+    { name:"participant_summary", rows:[sumHeader].concat(sumRows) },
+    { name:"event_log", rows:[evHeader].concat(evRows) },
+    { name:"raw_json", rows:[rawHeader].concat(rawRows) }
+  ];
+}
+
+function downloadXlsxBytes(bytes, filename){
+  const blob = new Blob([bytes], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  download(filename, blob);
+}
+
+/* 参与者端：生成并下载 experiment_<participant_id>.xlsx（三工作表）。
+   任何单元格超限都采用「说明文字替代 + JSON 备用下载 + 明确提示」，绝不谎报成功或静默截断。 */
+function anyCellOverLimit(sheets){
+  for(const sh of sheets){
+    for(const row of (sh.rows||[])){
+      for(const c of row){
+        if(typeof c === "string" && c.length > 32767) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function exportExpXlsx(){
+  if(!S.session){ toast("暂无记录"); return; }
+  const pid = S.session.participant_id || "unknown";
+  try{
+    const sheets = recordsToXlsxSheets([S.session]);
+    const overLimit = anyCellOverLimit(sheets);
+    const bytes = globalThis.buildXlsx(sheets);
+    downloadXlsxBytes(bytes, "experiment_"+pid+".xlsx");
+    if(overLimit){
+      toast("⚠ 部分字段超 Excel 单格上限，已用说明文字替代并自动下载 JSON 备用，请用 JSON 获取完整内容。");
+      downloadExpJson(); // 可靠的备份：JSON 文件无单格长度限制
+    } else {
+      toast("已下载 XLSX（含 participant_summary / event_log / raw_json 三表）");
+    }
+  }catch(e){
+    const msg = String((e && e.message) || e);
+    toast("XLSX 生成失败：" + msg + " 已改用 JSON 下载备用。");
+    downloadExpJson();
+  }
+}
+
+/* —— 会话恢复 / 重复进入 —— */
+function resumeSession(sess){
+  S.session = sess;
+  S.expStart = performance.now() - (sess.reading_time_sec ? sess.reading_time_sec*1000 : 0);
+  const step = sess.step || 1;
+  if(step >= 1){
+    $("#expNews").innerHTML = renderNews(sess.AI_label, sess.evidence_consistency, {highlight:false, sum:false});
+  }
+  if(step >= 2){
+    buildPilotVerify();
+    $("#expNewsVerify").innerHTML = renderNews(sess.AI_label, sess.evidence_consistency, {highlight:false, sum:false});
+    refreshExpVCounter();
+  }
+  if(step >= 3){
+    buildExpQuestions();
+    restoreExpAnswers(sess);
+  }
+  if(step >= 4){
+    showExpDone(sess);
+    return;
+  }
+  showExpStep(step===1 ? "expRead" : step===2 ? "expVerify" : "expQuestions");
+}
+
+function showCompleted(){
+  EXP_STEPS.forEach(s=>{ const el=$("#"+s); if(el) el.style.display="none"; });
+  $("#expCompleted").style.display="block";
+  const sess = loadSession();
+  if(sess) $("#expCompletedPid").textContent = sess.participant_id;
+  // 已完成会话重新打开：若尚未同步成功，自动补同步（幂等）
+  const note = $("#expCompletedServerNote");
+  const row = $("#btnExpCompletedRetryRow");
+  if(!EXP_CONFIG.DATA_ENDPOINT){
+    if(note){ note.textContent = "（纯本地模式：数据仅存于本机浏览器。）"; note.style.color = "var(--ink)"; }
+    if(row) row.style.display = "none";
+    return;
+  }
+  if(sess && sess.server_synced){
+    if(note){ note.textContent = "✓ 已同步到研究服务器" + (sess.server_received_at ? "（接收于 "+new Date(sess.server_received_at).toLocaleString()+"）" : ""); note.style.color = "var(--ok)"; }
+    if(row) row.style.display = "none";
+  } else if(sess){
+    if(note){ note.textContent = "正在同步到研究服务器…"; note.style.color = "var(--ink)"; }
+    syncToServer(sess).then(r=>{
+      if(r === "fail" && note){ note.innerHTML = "⚠ 同步失败，数据已在本机。请稍后点击「重试同步」。"; note.style.color = "var(--warn)"; if(row) row.style.display = "flex"; }
+    });
+  }
+}
+
+/* —— 研究者「⑦ 实验参与者数据」面板（只读本地查看） —— */
+function renderExpTable(){
+  if(!S.expRecords.length){ $("#expTable").innerHTML="（暂无记录）"; return; }
+  const cols = [
+    ["participant_id","研究编号"],
+    ["AI_label","AI标识条件"],
+    ["evidence_consistency","一致性条件"],
+    ["status","实验状态"],
+    ["step","到达阶段"],
+    ["started_at","开始时间"],
+    ["last_active","最后活动时间"],
+    ["completed_at","完成时间"],
+    ["verify_status","核验状态"],
+    ["verification","verification"],
+    ["verify_count","打开材料数"],
+    ["verify_opened_any","是否打开过"]
+  ];
+  const fmtTs = ts => ts ? new Date(ts).toLocaleString() : "—";
+  const lblAi = v => v===0?"无标识":(v===1?"AI辅助生成":"AI生成");
+  const lblCons = v => v===0?"一致":"冲突";
+  const head = cols.map(c=>`<th>${c[1]}</th>`).join('');
+  const rows = S.expRecords.map(r=>{
+    const v = r.verify||{};
+    const cells = [
+      r.participant_id,
+      lblAi(r.AI_label),
+      lblCons(r.evidence_consistency),
+      r.status==="in_progress" ? "进行中" : "已完成",
+      (r.step||"—"),
+      fmtTs(r.started_at),
+      fmtTs(r.last_active),
+      fmtTs(r.completed_at),
+      deriveVerifyStatus(r),
+      (r.verification==null?0:r.verification),
+      (v.count||0),
+      (v.opened_any?"是":"否")
+    ];
+    return `<tr>${cells.map(c=>`<td>${escapeHtml(String(c))}</td>`).join('')}</tr>`;
+  }).join('');
+  const done = S.expRecords.filter(r=>r.status!=="in_progress").length;
+  const sum = `<p class="small" style="margin:0 0 8px">共 <b>${S.expRecords.length}</b> 条本地记录（本浏览器）：已完成 <b>${done}</b> 条，进行中 <b>${S.expRecords.length-done}</b> 条。</p>`;
+  $("#expTable").innerHTML = sum + `<table class="t"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function toggleResearcher(){
@@ -1781,60 +2363,44 @@ function toggleResearcher(){
   }
 }
 
-function initPilot(){
-  try{ const d = JSON.parse(localStorage.getItem("pilot_data")||"[]"); if(Array.isArray(d)) S.pilotAll = d; }catch(e){}
+function initExperiment(){
+  loadExpRecords();
+  const sess = loadSession();
 
-  $("#btnPilotStart").addEventListener("click", startPilot);
-  $("#btnPilotReadDone").addEventListener("click", ()=>{
-    $("#pilotRead").style.display = "none";
-    $("#pilotQs").style.display = "block";
-    buildPilotScales();
-    window.scrollTo({top:0, behavior:"smooth"});
-  });
-  $$("#pq1 .opt").forEach(b=> b.addEventListener("click", ()=>{
-    $$("#pq1 .opt").forEach(x=>x.classList.remove("on")); b.classList.add("on");
-    if(S.pilot) S.pilot.q1 = b.dataset.v;
-  }));
-  $$("#pq4 .opt").forEach(b=> b.addEventListener("click", ()=>{
-    $$("#pq4 .opt").forEach(x=>x.classList.remove("on")); b.classList.add("on");
-    if(S.pilot) S.pilot.q4_false_info = b.dataset.v;
-  }));
-  $("#btnPilotSubmit").addEventListener("click", submitPilot);
-  $("#btnPilotCopy").addEventListener("click", ()=>{
-    if(!S.pilot){ toast("请先完成作答"); return; }
-    navigator.clipboard.writeText(JSON.stringify(S.pilot,null,2))
-      .then(()=>toast("已复制，可发给研究者")).catch(()=>toast("复制失败，请改用下载"));
-  });
-  $("#btnPilotDownload").addEventListener("click", ()=>{
-    if(!S.pilot){ toast("请先完成作答"); return; }
-    download("pilot_answer.json", JSON.stringify(S.pilot,null,2));
-    toast("已下载我的回答");
-  });
-  $("#btnPilotAgain").addEventListener("click", ()=>{
-    $("#pilotDone").style.display = "none";
-    $("#pilotIntro").style.display = "block";
-    S.pilot = null;
-    window.scrollTo({top:0, behavior:"smooth"});
+  // 参与者流程控件
+  $("#btnExpStart").addEventListener("click", ()=>{ if($("#expConsentCb").checked) startExperiment(); else toast("请先勾选同意"); });
+  $("#expConsentCb").addEventListener("change", e=>{ $("#btnExpStart").disabled = !e.target.checked; $("#expConsentNote").textContent = e.target.checked ? "" : "请先勾选同意后再开始。"; });
+  $("#btnExpReadDone").addEventListener("click", expReadDone);
+  $("#btnExpVerifyDone").addEventListener("click", ()=>{ if(!S.session) return; S.session.step=3; S.session.last_active=Date.now(); saveSession(); buildExpQuestions(); showExpStep("expQuestions"); });
+  $("#btnExpSubmit").addEventListener("click", submitExperiment);
+  $("#btnExpDownload").addEventListener("click", exportExpXlsx);
+  $("#btnExpDownloadJson").addEventListener("click", downloadExpJson);
+  $("#btnExpCopy").addEventListener("click", copyExpJson);
+  $("#btnExpCopyPid").addEventListener("click", copyExpPid);
+  $("#btnExpRetrySync").addEventListener("click", ()=>{ if(S.session) syncToServer(S.session, {manual:true}); });
+  $("#btnExpCompletedRetry").addEventListener("click", ()=>{ const sess = loadSession(); if(sess) syncToServer(sess, {manual:true}); });
+  $("#btnExpAgainNew").addEventListener("click", ()=>{
+    // 防重复参与：生成新编号会创建一条新的参与者记录，可能被判定为重复数据。
+    // 默认阻止，仅在参与者明确二次确认后才允许（用于研究者安排的换设备补填等边缘情况）。
+    if(!confirm("⚠ 重要提示\n本浏览器已存在一条实验记录。点击确认将生成一个新的参与者编号，可能产生重复提交数据，违反“一人一响应”原则。\n\n除非研究主持者明确要求，否则请勿点击确认。\n\n是否仍要生成新编号？")) return;
+    clearSession(); S.session=null; _syncDone=false; _syncInFlight=false; showExpStep("expConsent"); $("#expConsentCb").checked=false; $("#btnExpStart").disabled=true;
   });
 
-  $("#btnPilotCsv").addEventListener("click", downloadPilotCsv);
-  $("#btnPilotJsonAll").addEventListener("click", ()=>{
-    if(!S.pilotAll.length){ toast("暂无预测试数据"); return; }
-    download("pilot_answers.json", JSON.stringify(S.pilotAll,null,2));
-    toast("已下载预测试 JSON");
-  });
-  $("#btnPilotClear").addEventListener("click", ()=>{
-    if(!confirm("确认清空本机全部预测试记录？此操作不可恢复。")) return;
-    S.pilotAll = []; try{ localStorage.removeItem("pilot_data"); }catch(e){}
-    renderPilotTable(); toast("已清空预测试记录");
-  });
+  // 研究者「⑦ 实验参与者数据」面板（只读本地查看，无导出按钮）
+  $("#btnExpClear").addEventListener("click", ()=>{ if(!confirm("确认清空本机全部实验记录？此操作不可恢复，且不影响参与者已上传到问卷星的文件。")) return; S.expRecords=[]; saveExpRecords(); renderExpTable(); toast("已清空本机实验记录"); });
 
+  // 研究者入口
   $("#researcherEntry").addEventListener("click", toggleResearcher);
   $("#researcherBack").addEventListener("click", toggleResearcher);
+
+  // 恢复会话 / 已完成提示 / 全新
+  if(sess && sess.status==="completed"){ showCompleted(); }
+  else if(sess && sess.status==="in_progress"){ resumeSession(sess); }
+  else { showExpStep("expConsent"); }
 }
 
 document.addEventListener("DOMContentLoaded", init);
-document.addEventListener("DOMContentLoaded", initPilot);
+document.addEventListener("DOMContentLoaded", initExperiment);
 </script>
 </body>
 </html>

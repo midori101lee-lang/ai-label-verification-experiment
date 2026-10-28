@@ -1,0 +1,20 @@
+# 示例配置：独立 Worker 部署（可选）
+# 复制为 wrangler.toml 后填入你的值，再 `wrangler deploy`。
+# 若已使用 Pages Functions（functions/ 目录）则可不部署此 Worker。
+
+name = "ai-label-exp-collector"
+main = "worker.mjs"
+compatibility_date = "2024-09-23"
+
+# D1 持久化数据库（先 `wrangler d1 create ai_label_exp` 得到 id）
+[[d1_databases]]
+binding = "DB"
+database_name = "ai_label_exp"
+database_id = "在此填入你的-d1-id"
+
+# 环境变量与密钥（Secret 用 `wrangler secret put` 设置，勿写入明文）
+# [vars]
+# ALLOWED_ORIGIN = "https://ai-label-verification-experiment.pages.dev"   # 仅允许实验页来源提交
+
+# wrangler secret put ADMIN_PASSWORD
+# wrangler secret put JWT_SECRET
